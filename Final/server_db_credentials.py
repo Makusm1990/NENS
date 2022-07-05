@@ -9,9 +9,9 @@ PORT_ID = "5432"    # PostgreSQL PORT
 
 # connection postgreSQL
 con_postgreSQL = psycopg2.connect(
-    HOST = HOSTNAME,
-    DBNAME = DATABASE,
-    USER = USERNAME,
-    PASSWORD = PWD,
-    PORT = PORT_ID
+    host = HOSTNAME,
+    dbname = DATABASE,
+    user = USERNAME,
+    password = PWD,
+    port = PORT_ID
 )
