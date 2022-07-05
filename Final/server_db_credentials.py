@@ -1,17 +1,17 @@
 import psycopg2
 
 # Path and credentials for PostgreSQL 
-hostname=""
-database=""
-username=""
-pwd=""
-port_id=5432
+HOSTNAME = ""   # Enter the name of the host where the PostgreSQL databse is located.
+DATABASE = ""   # The name of your database
+USERNAME = ""   # PostgreSQL Username 
+PWD = ""        # PostgreSQL Password
+PORT_ID = ""    # PostgreSQL PORT
 
 # connection postgreSQL
 con_postgreSQL = psycopg2.connect(
-    host = hostname,
-    dbname = database,
-    user = username,
-    password = pwd,
-    port = port_id
+    HOST = HOSTNAME,
+    DBNAME = DATABASE,
+    USER = USERNAME,
+    PASSWORD = PWD,
+    PORT = PORT_ID
 )
