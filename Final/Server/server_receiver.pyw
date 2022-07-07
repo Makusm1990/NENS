@@ -26,10 +26,6 @@ def create_entrie(device):
     except (Exception, psycopg2.Error) as error:
         print(error)
 
-
-#con_postgreSQL.close()
-
-
 def listen(): 
    clientsocket, address = SOCKET_PARM.accept()
    for device in CONFIG:

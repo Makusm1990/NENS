@@ -7,7 +7,7 @@ import tkinter as tk
 import threading
 import os
 
-from client_sender import main as alarm_from_taskbar
+from client_sender import sending as alarm_from_taskbar
 from tkinter import messagebox
 
 
@@ -70,18 +70,14 @@ def alarm(device):
 
 def alarmsound():
    print("alarmsound")
-   duration = 1000  # milliseconds
-   freq = 440  # Hz
-   winsound.Beep(freq, duration)
-   duration = 1000  # milliseconds
-   freq = 880  # Hz
-   winsound.Beep(freq, duration)
-   duration = 1000  # milliseconds
-   freq = 440  # Hz
-   winsound.Beep(freq, duration)
-   duration = 1000  # milliseconds
-   freq = 880  # Hz
-   winsound.Beep(freq, duration)
+   for x in range(2):
+      duration = 1000  # milliseconds
+      freq = 440  # Hz
+      winsound.Beep(freq, duration)
+      duration = 1000  # milliseconds
+      freq = 880  # Hz
+      winsound.Beep(freq, duration)
+
    
 def listen(): 
    clientsocket, address = SOCKET_PARM.accept()

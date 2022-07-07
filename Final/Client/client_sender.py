@@ -13,7 +13,7 @@ def send_threads(device):
     except ConnectionRefusedError as error:
         print(CONFIG[device]["IPAddress"],error)
 
-def main():     
+def sending():     
     for device in CONFIG:
         try:
             send = threading.Thread(target=send_threads, args=(device,))
@@ -22,6 +22,6 @@ def main():
             continue
 
 if __name__ == "__main__":
-    main()
+    sending()
 
 
