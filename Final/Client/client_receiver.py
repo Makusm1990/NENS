@@ -1,17 +1,48 @@
 import socket
-import tkinter as tk
-from tkinter import messagebox
 import winsound
 import json
+import pystray
+import PIL.Image
+import tkinter as tk
+import threading
+import os
+
+from client_sender import main as alarm_from_taskbar
+from tkinter import messagebox
+
 
 HOSTNAME = socket.gethostname()   
 IP_ADDRESS = socket.gethostbyname(HOSTNAME)   
 PORT = 8080
 CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))
+SYSTRAY_ICON = PIL.Image.open(r"\\dc01\netlogon\Notfall\Notfall.ico")
 
 SOCKET_PARM = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 SOCKET_PARM.bind((IP_ADDRESS, PORT))
 SOCKET_PARM.listen(5)
+
+
+class SystemtrayIcon:
+   def __init__(self):
+      self.thread_systray = threading.Thread(target=self.systray)
+      self.thread_systray.start()
+
+   def on_clicked_alarm(self):
+      alarm_from_taskbar()    
+   
+   def version_info(self):
+      print("Version 1.0.0")
+
+   def systray(self):
+      self.icon = pystray.Icon("alarm", SYSTRAY_ICON, menu=pystray.Menu(
+               pystray.MenuItem("ALARM!!!",SystemtrayIcon.on_clicked_alarm),
+               pystray.MenuItem("Version",SystemtrayIcon.version_info),
+               pystray.MenuItem("Exit", exit_session),
+            ))
+      self.icon.run()
+
+def exit_session():
+   os._exit(1)
 
 def alarm(device):
    root= tk.Tk()
@@ -59,7 +90,12 @@ def listen():
       if address[0] == CONFIG[x]["IPAddress"]:         
          print(f"Alarm from {device}")
          alarm(device)
+  
 
-if __name__ == "__main__":  
+if __name__ == "__main__": 
+   SystemtrayIcon()
    while True:
       listen()
+   
+      
+      
