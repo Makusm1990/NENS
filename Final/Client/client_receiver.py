@@ -9,6 +9,7 @@ import os
 import signal
 import multiprocessing
 from multiprocessing import Process,freeze_support
+import psutil
 import threading
 from ctypes import *
 from tkinter import messagebox
@@ -21,8 +22,8 @@ SYSTRAY_ICON = PIL.Image.open(r"D:\x_Notfall\Final\Client\alarm_icon.png")
 
 
 class SystemtrayIcon:
-   def __init__(self,*args):
-      self.systray(self,*args)
+   def __init__(self):
+      self.systray(self)
 
    def on_clicked_alarm(self):
       sending()   
@@ -30,9 +31,15 @@ class SystemtrayIcon:
    def version_info(self):
       print("Version 1.0.0")
    
-   def exit_session(self,*args):
+   def exit_session(self):
       parent_id = os.getpid()
-      print(parent_id)
+
+      parent = psutil.Process(parent_id)
+      for child in parent.children(recursive=True):  # or parent.children() for recursive=False
+         child.kill()
+      parent.kill()
+      
+
 
    def systray(self,*args):
       self.icon = pystray.Icon("alarm", SYSTRAY_ICON, menu=pystray.Menu(
@@ -134,7 +141,7 @@ def sending():
         except Exception:
             continue
 
-def create_processes():
+def create_processes(parent):
    a = Process(target=SystemtrayIcon)
    b = Process(target=Socketlisten)
    c = Process(target=USB_Taster)   
@@ -143,11 +150,14 @@ def create_processes():
    c.start()
 
 if __name__ == "__main__": 
-   create_processes() 
    parent = multiprocessing.current_process()
+   create_processes(parent) 
+   
    print(f"Parent_ID: {parent.pid}")
 
-
+"""
+passing parent ID o child process
+"""
       
    
       
