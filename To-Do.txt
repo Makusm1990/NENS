@@ -1,6 +1,2 @@
-# USB Taster integrieren
-#
-#
-#
 # Code aufräumen
 # Dokumentation

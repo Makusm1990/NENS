@@ -16,7 +16,7 @@ cur_postgre_db = con_postgreSQL.cursor()
 
 def create_entrie(device):
     entrie_NAME = CONFIG[device]["Name"]
-    entrie_IPv4 = CONFIG[device]["IPAddress"]
+    entrie_IPv4 = CONFIG[device]["IPAddress"]    
     insert_data = (entrie_NAME,entrie_IPv4)
 
     try:
