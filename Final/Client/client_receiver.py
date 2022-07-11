@@ -1,29 +1,31 @@
+import queue
 import socket
 import winsound
 import json
-from xmlrpc.client import boolean
 import pystray
 import PIL.Image
 import tkinter as tk
 import os
-import signal
 import multiprocessing
-from multiprocessing import Process,freeze_support
+from multiprocessing import Process,Queue
 import psutil
 import threading
 from ctypes import *
 from tkinter import messagebox
 
+
 HOSTNAME = socket.gethostname()   
 IP_ADDRESS = socket.gethostbyname(HOSTNAME)   
 PORT = 8080
 CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))
-SYSTRAY_ICON = PIL.Image.open(r"D:\x_Notfall\Final\Client\alarm_icon.png")
+SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\logo.png')
 
 
 class SystemtrayIcon:
-   def __init__(self):
-      self.systray(self)
+   def __init__(self,queue,parent_pid):
+      self.queue = queue
+      self.parent_pid = parent_pid
+      self.systray(parent_pid)
 
    def on_clicked_alarm(self):
       sending()   
@@ -31,25 +33,28 @@ class SystemtrayIcon:
    def version_info(self):
       print("Version 1.0.0")
    
-   def exit_session(self):
-      parent_id = os.getpid()
+   def exit_session(self,parent_pid):      
+      tray = os.getpid()
+      tray_pid = psutil.Process(tray)
+      parent_pid = psutil.Process(parent_pid)
 
-      parent = psutil.Process(parent_id)
-      for child in parent.children(recursive=True):  # or parent.children() for recursive=False
-         child.kill()
-      parent.kill()
+      for child in parent_pid.children(recursive=True):
+         if child.pid != tray:
+            print(f"|   |_____ Closing child process: {child.pid}" )
+            child.kill()
+      print(f"|\n|_____Closing parent process: {parent_pid.pid}")
+      parent_pid.kill()
+      print(f"|\n|________ Closing child process: {tray_pid.pid} (Trayicon)\n")
+      tray_pid.kill()
       
-
-
-   def systray(self,*args):
+   def systray(self,parent_pid):
       self.icon = pystray.Icon("alarm", SYSTRAY_ICON, menu=pystray.Menu(
                pystray.MenuItem("ALARM!!!",SystemtrayIcon.on_clicked_alarm),
                pystray.MenuItem("Version",SystemtrayIcon.version_info),
-               pystray.MenuItem("Exit", SystemtrayIcon.exit_session),
+               pystray.MenuItem("Exit", lambda : SystemtrayIcon.exit_session(self,parent_pid)),
             ))
       self.icon.run()
-   
-   
+
 class Socketlisten:
    def __init__(self,*args):
       self.listen()
@@ -134,15 +139,15 @@ def send_threads(device):
         print(CONFIG[device]["IPAddress"],error)
 
 def sending():     
-    for device in CONFIG:
-        try:
-            send = threading.Thread(target=send_threads, args=(device,))
-            send.start()
-        except Exception:
-            continue
+   for device in CONFIG:
+      try:
+         send = threading.Thread(target=send_threads, args=(device,))
+         send.start()
+      except Exception:
+         continue
 
-def create_processes(parent):
-   a = Process(target=SystemtrayIcon)
+def create_processes(parent_pid):
+   a = Process(target=SystemtrayIcon, args=(queue,parent_pid))
    b = Process(target=Socketlisten)
    c = Process(target=USB_Taster)   
    a.start()
@@ -150,14 +155,13 @@ def create_processes(parent):
    c.start()
 
 if __name__ == "__main__": 
+   queue = Queue()
    parent = multiprocessing.current_process()
-   create_processes(parent) 
+   parent_pid = parent.pid
+   create_processes(parent_pid) 
    
-   print(f"Parent_ID: {parent.pid}")
+   print(f"\nParent process: {parent.pid}")
 
-"""
-passing parent ID o child process
-"""
       
    
       
