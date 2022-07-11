@@ -19,7 +19,7 @@ HOSTNAME = socket.gethostname()
 IP_ADDRESS = socket.gethostbyname(HOSTNAME)   
 PORT = 8080
 CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))
-SYSTRAY_ICON = PIL.Image.open(r'D:\x_Notfall\Final\Client\logo.png')
+SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\logo.png')
 
 
 class SystemtrayIcon:
@@ -77,7 +77,7 @@ class USB_Taster:
       self.usb_listen()
       
    def usb_listen(self):
-    mydll=windll.LoadLibrary(r"D:\x_Notfall\Final\Client\USBaccessX64.dll")
+    mydll=windll.LoadLibrary(r'\\dc01\netlogon\Notfall\USBaccessX64.dll')
     cw=mydll.FCWInitObject()
     devCnt=mydll.FCWOpenCleware(0)
 
