@@ -1,17 +1,18 @@
+import os
+import json
 import queue
 import socket
-import winsound
-import json
+import psutil
 import pystray
+import winsound
+import threading
 import PIL.Image
 import tkinter as tk
-import os
 import multiprocessing
-from multiprocessing import Process,Queue
-import psutil
-import threading
+
 from ctypes import *
 from tkinter import messagebox
+from multiprocessing import Process,Queue
 
 
 HOSTNAME = socket.gethostname()   
@@ -66,7 +67,7 @@ class Socketlisten:
          self.SOCKET_PARM.listen(1) 
          clientsocket, address = self.SOCKET_PARM.accept()
          for x in CONFIG:
-            device = CONFIG[x]["Name"]
+            device = CONFIG[x]["Alias"]
             if address[0] == CONFIG[x]["IPAddress"]:         
                print(f"Alarm from {device}")
                alarm(device)
@@ -107,9 +108,10 @@ def alarm(device):
    height = round(screensize_height*0.99)
    root.geometry(f"{width}x{height}")
 
-   label_INFO = tk.Label(master=root, text=f"NOTFALL {device}",font=('Times 50'))
-   label_INFO.place(height=100, width=width, y=(height*0.02))
-   root.after(1000,alarmsound)
+   label_INFO = tk.Label(master=root, text=f"NOTFALL \n{device}",font=('Arial 70'),bg="yellow",fg="black")
+   label_INFO.place(height=250, width=width, y=(height*0.08))
+   alarm_sound = root.after(1000,alarmsound)
+   threading.Thread(target=alarm_sound)   
    messagebox.showinfo(title=F"NOTFALL {device}",message="Meldung schließen?",icon="warning")
    #
    # Bestätigung an Sender schicken das die Meldung gelesen wurde
@@ -128,7 +130,7 @@ def alarmsound():
       winsound.Beep(freq, duration)
       duration = 1000  # milliseconds
       freq = 880  # Hz
-      winsound.Beep(freq, duration)
+      winsound.Beep(freq, duration)    
 
 def send_threads(device):
     print(device)
