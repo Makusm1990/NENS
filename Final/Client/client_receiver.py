@@ -15,10 +15,10 @@ from pystray import Icon as icon, Menu as menu, MenuItem as item
 
 
 HOSTNAME = socket.gethostname()   
-IP_ADDRESS = socket.gethostbyname(HOSTNAME)   
+IP_ADDRESS = socket.gethostbyname(HOSTNAME) #### IP conflict when virtuall network!!!  
 PORT = 8080
 CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))
-SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\logo.png')
+SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\Logos\logo.png')
 
 
 class SystemtrayIcon:
@@ -35,7 +35,7 @@ class SystemtrayIcon:
       root.geometry("250x100")
       root.title("About NENS")
       root.eval('tk::PlaceWindow . center')
-      root.iconbitmap(r"D:\x_Notfall\Final\Logos\logo_small.ico")
+      root.iconbitmap(r'\\dc01\netlogon\Notfall\Logos\logo_small.ico')
       label = tk.Label(root, text=f"Network Emergency Notification Service \nVersion: 1.0.0")
       label.pack(side="top", fill="x", pady=10)
       exit_button = tk.Button(root, text="Close", command = root.destroy)
@@ -65,15 +65,17 @@ class SystemtrayIcon:
       self.icon.run()
 
 class Socketlisten:
-   def __init__(self):
-      self.listen()
+   def __init__(self,queue,parent_pid):
+      self.queue = queue
+      self.parent_pid = parent_pid
+      self.listen(parent_pid)
 
-   def listen(self):
+   def listen(self,parent_pid):
       try:
          self.SOCKET_PARM = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
          self.SOCKET_PARM.bind((IP_ADDRESS, PORT))
          while True: 
-            self.SOCKET_PARM.listen(1) 
+            self.SOCKET_PARM.listen(5) 
             clientsocket, address = self.SOCKET_PARM.accept()
             for x in CONFIG:
                device = CONFIG[x]["Alias"]
@@ -83,6 +85,18 @@ class Socketlisten:
       except Exception as error:
          print("ERROR",error)
          print("Already running")
+         tray = os.getpid()
+         tray_pid = psutil.Process(tray)
+         parent_pid = psutil.Process(parent_pid)
+
+         for child in parent_pid.children(recursive=True):
+            if child.pid != tray:
+               print(f"|   |_____ Closing child process: {child.pid}" )
+               child.kill()
+         print(f"|\n|_____Closing parent process: {parent_pid.pid}")
+         parent_pid.kill()
+         print(f"|\n|________ Closing child process: {tray_pid.pid} (Trayicon)\n")
+         tray_pid.kill()
          
 class USB_Taster:
    def __init__(self,*args):
@@ -94,8 +108,11 @@ class USB_Taster:
     devCnt=mydll.FCWOpenCleware(0)
 
     if (devCnt != 1) :
-        print("no device found")
-        exit()
+      print(f"|\n|   No USB device found")
+      tray = os.getpid()
+      tray_pid = psutil.Process(tray)
+      print(f"|___Closing child process: {tray}")
+      tray_pid.kill()
 
     state = 0
 
@@ -112,7 +129,7 @@ class USB_Taster:
 def alarm(device):
    root= tk.Tk()
    root.title('NOTFALL')
-   root.iconbitmap(r"D:\x_Notfall\Final\Logos\logo_small.ico")
+   root.iconbitmap(r'\\dc01\netlogon\Notfall\Logos\logo_small.ico')
    root.configure(background='red')
 
    screensize_width = root.winfo_screenwidth()
@@ -146,26 +163,35 @@ def alarmsound():
       winsound.Beep(freq, duration)    
 
 def send_threads(device):
-    print(device)
-    try:
-        CONFIG[device]["Name"] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        CONFIG[device]["Name"].connect((CONFIG[device]["IPAddress"],PORT))
-    except ConnectionRefusedError as error:
-        print(CONFIG[device]["IPAddress"],error)
+   try:
+      client_name = CONFIG[device]["Name"]
+      client_IP = CONFIG[device]["IPAddress"]
 
-def sending():     
+      client_name = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      client_name.connect((client_IP,PORT))
+   except (ConnectionError, TimeoutError, ConnectionRefusedError) as error:
+      print(f"Sending alarm to: {client_IP} failed {error}")
+
+def sending():   
+   threads = [] 
+   print(len(CONFIG)) 
    for device in CONFIG:
       try:
          send = Thread(target=send_threads, args=(device,))
+         threads.append(send)
          send.start()
-      except Exception:
+      except Exception as error:
+         print(error,device)
          continue
+   for thread in threads:
+      thread.join()
+   print(f"Threads: {len(threads)} finished")
 
 def create_processes(parent_pid):
    child_processes = []
 
    systemtry_thread = Process(target=SystemtrayIcon, args=(queue,parent_pid))
-   socket_thread = Process(target=Socketlisten)
+   socket_thread = Process(target=Socketlisten, args=(queue,parent_pid))
    usb_button_thread = Process(target=USB_Taster)
 
    child_processes.append(socket_thread)
@@ -175,31 +201,19 @@ def create_processes(parent_pid):
    for child in child_processes:
       try:
          child.start()
+         print(f"|___Child process: {child.pid}")
       except Exception as error:
          print(error)
 
-def checkIfProcessRunning(processName):   
-   for process in psutil.process_iter():
-      try:
-         # Check if process name contains the given name string.
-         if processName.lower() in process.name().lower():
-            return True
-      except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-         pass
-   return False
 
 if __name__ == "__main__": 
    freeze_support()
    queue = Queue()
    parent = current_process()
    parent_pid = parent.pid
-   if checkIfProcessRunning("client_receiver") == True:
-      #print(checkIfProcessRunning("client_receiver"))
-      #print("Programm already running!")
-      pass
-   else:
-      create_processes(parent_pid) 
-      print(f"\nParent process: {parent.pid}")
+   print(f"\nParent process: {parent.pid}")
+   create_processes(parent_pid) 
+   
 
       
    
