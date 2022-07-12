@@ -1,18 +1,17 @@
 import os
 import json
-import queue
 import socket
 import psutil
-import pystray
 import winsound
-import threading
 import PIL.Image
 import tkinter as tk
-import multiprocessing
 
+from threading import Thread
+from multiprocessing import Process,Queue,current_process
 from ctypes import *
 from tkinter import messagebox
 from multiprocessing import Process,Queue,freeze_support
+from pystray import Icon as icon, Menu as menu, MenuItem as item
 
 
 HOSTNAME = socket.gethostname()   
@@ -32,8 +31,17 @@ class SystemtrayIcon:
       sending()   
    
    def version_info(self):
-      print("Version 1.0.0")
-   
+      root = tk.Tk()
+      root.geometry("250x100")
+      root.title("About NENS")
+      root.eval('tk::PlaceWindow . center')
+      root.iconbitmap(r"D:\x_Notfall\Final\Logos\logo_small.ico")
+      label = tk.Label(root, text=f"Network Emergency Notification Service \nVersion: 1.0.0")
+      label.pack(side="top", fill="x", pady=10)
+      exit_button = tk.Button(root, text="Close", command = root.destroy)
+      exit_button.pack()
+      root.mainloop()
+
    def exit_session(self,parent_pid):      
       tray = os.getpid()
       tray_pid = psutil.Process(tray)
@@ -49,29 +57,33 @@ class SystemtrayIcon:
       tray_pid.kill()
       
    def systray(self,parent_pid):
-      self.icon = pystray.Icon("alarm", SYSTRAY_ICON, menu=pystray.Menu(
-               pystray.MenuItem("ALARM!!!",SystemtrayIcon.on_clicked_alarm),
-               pystray.MenuItem("Version",SystemtrayIcon.version_info),
-               pystray.MenuItem("Exit", lambda : SystemtrayIcon.exit_session(self,parent_pid)),
+      self.icon = icon("alarm", SYSTRAY_ICON, menu=menu(
+               item("ALARM!!!",SystemtrayIcon.on_clicked_alarm),
+               item("About",SystemtrayIcon.version_info, ),
+               item("Exit" ,lambda : SystemtrayIcon.exit_session(self,parent_pid)),
             ))
       self.icon.run()
 
 class Socketlisten:
-   def __init__(self,*args):
+   def __init__(self):
       self.listen()
 
    def listen(self):
-      self.SOCKET_PARM = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      self.SOCKET_PARM.bind((IP_ADDRESS, PORT))
-      while True: 
-         self.SOCKET_PARM.listen(1) 
-         clientsocket, address = self.SOCKET_PARM.accept()
-         for x in CONFIG:
-            device = CONFIG[x]["Alias"]
-            if address[0] == CONFIG[x]["IPAddress"]:         
-               print(f"Alarm from {device}")
-               alarm(device)
-
+      try:
+         self.SOCKET_PARM = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+         self.SOCKET_PARM.bind((IP_ADDRESS, PORT))
+         while True: 
+            self.SOCKET_PARM.listen(1) 
+            clientsocket, address = self.SOCKET_PARM.accept()
+            for x in CONFIG:
+               device = CONFIG[x]["Alias"]
+               if address[0] == CONFIG[x]["IPAddress"]:         
+                  print(f"Alarm from {device}")
+                  alarm(device)
+      except Exception as error:
+         print("ERROR",error)
+         print("Already running")
+         
 class USB_Taster:
    def __init__(self,*args):
       self.usb_listen()
@@ -100,18 +112,19 @@ class USB_Taster:
 def alarm(device):
    root= tk.Tk()
    root.title('NOTFALL')
+   root.iconbitmap(r"D:\x_Notfall\Final\Logos\logo_small.ico")
    root.configure(background='red')
 
    screensize_width = root.winfo_screenwidth()
    width = round(screensize_width*0.99)
    screensize_height = root.winfo_screenheight()
    height = round(screensize_height*0.99)
-   root.geometry(f"{width}x{height}")
+   root.geometry(f"{width}x{height}+0+0")
 
    label_INFO = tk.Label(master=root, text=f"NOTFALL \n{device}",font=('Arial 70'),bg="yellow",fg="black")
    label_INFO.place(height=250, width=width, y=(height*0.08))
    alarm_sound = root.after(1000,alarmsound)
-   threading.Thread(target=alarm_sound)   
+   Thread(target=alarm_sound)   
    messagebox.showinfo(title=F"NOTFALL {device}",message="Meldung schließen?",icon="warning")
    #
    # Bestätigung an Sender schicken das die Meldung gelesen wurde
@@ -143,27 +156,50 @@ def send_threads(device):
 def sending():     
    for device in CONFIG:
       try:
-         send = threading.Thread(target=send_threads, args=(device,))
+         send = Thread(target=send_threads, args=(device,))
          send.start()
       except Exception:
          continue
 
 def create_processes(parent_pid):
-   a = Process(target=SystemtrayIcon, args=(queue,parent_pid))
-   b = Process(target=Socketlisten)
-   c = Process(target=USB_Taster)   
-   a.start()
-   b.start()
-   c.start()
+   child_processes = []
+
+   systemtry_thread = Process(target=SystemtrayIcon, args=(queue,parent_pid))
+   socket_thread = Process(target=Socketlisten)
+   usb_button_thread = Process(target=USB_Taster)
+
+   child_processes.append(socket_thread)
+   child_processes.append(systemtry_thread)
+   child_processes.append(usb_button_thread)
+
+   for child in child_processes:
+      try:
+         child.start()
+      except Exception as error:
+         print(error)
+
+def checkIfProcessRunning(processName):   
+   for process in psutil.process_iter():
+      try:
+         # Check if process name contains the given name string.
+         if processName.lower() in process.name().lower():
+            return True
+      except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+         pass
+   return False
 
 if __name__ == "__main__": 
    freeze_support()
    queue = Queue()
-   parent = multiprocessing.current_process()
+   parent = current_process()
    parent_pid = parent.pid
-   create_processes(parent_pid) 
-   
-   print(f"\nParent process: {parent.pid}")
+   if checkIfProcessRunning("client_receiver") == True:
+      #print(checkIfProcessRunning("client_receiver"))
+      #print("Programm already running!")
+      pass
+   else:
+      create_processes(parent_pid) 
+      print(f"\nParent process: {parent.pid}")
 
       
    
