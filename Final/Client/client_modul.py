@@ -6,6 +6,7 @@ import winsound
 import PIL.Image
 import tkinter as tk
 
+from pynput import keyboard
 from threading import Thread
 from multiprocessing import Process,Queue,current_process
 from ctypes import *
@@ -131,6 +132,18 @@ class USB_Taster:
 
         state = newstate
 
+class Shortcut:
+   def __init__(self):
+      self.listen_to_keybord()
+
+   def on_press(self):
+    sending()
+
+   def listen_to_keybord(self):
+      with keyboard.GlobalHotKeys({
+            '<alt>+<ctrl>+n': self.on_press,}) as pressed:
+         pressed.join()
+
 def alarm(device):
    root= tk.Tk()
    root.title('NOTFALL')
@@ -159,12 +172,12 @@ def alarm(device):
 
 def alarmsound():
    print("alarmsound")
-   for x in range(2):
-      duration = 1000  # milliseconds
-      freq = 440  # Hz
+   for x in range(4):
+      duration = 800  # milliseconds
+      freq = 600  # Hz
       winsound.Beep(freq, duration)
-      duration = 1000  # milliseconds
-      freq = 880  # Hz
+      duration = 800  # milliseconds
+      freq = 1000  # Hz
       winsound.Beep(freq, duration)    
 
 def send_threads(device):
@@ -193,10 +206,12 @@ def sending():
 def create_processes(parent_pid):
    child_processes = []
 
-   systemtry_thread = Process(target=SystemtrayIcon, args=(queue,parent_pid))
-   socket_thread = Process(target=Socketlisten, args=(queue,parent_pid))
-   usb_button_thread = Process(target=USB_Taster)
+   systemtry_thread = Process(target=SystemtrayIcon,name="Tray Icon", args=(queue,parent_pid))
+   socket_thread = Process(target=Socketlisten, name="Socket listener", args=(queue,parent_pid))
+   usb_button_thread = Process(target=USB_Taster, name="USB Buzzer")
+   keybord_thread = Process(target=Shortcut, name="Keybord shortcut")
 
+   child_processes.append(keybord_thread)
    child_processes.append(socket_thread)
    child_processes.append(systemtry_thread)
    child_processes.append(usb_button_thread)
@@ -204,7 +219,7 @@ def create_processes(parent_pid):
    for child in child_processes:
       try:
          child.start()
-         print(f"|___Child process: {child.pid}")
+         print(f"|___Child process: {child.pid} // {child.name}")
       except Exception as error:
          print(error)
 
