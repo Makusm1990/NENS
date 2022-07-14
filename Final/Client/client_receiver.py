@@ -13,13 +13,18 @@ from tkinter import messagebox
 from multiprocessing import Process,Queue,freeze_support
 from pystray import Icon as icon, Menu as menu, MenuItem as item
 
+class NetworkSettings:  
+   PORT = 8080    
+   HOSTNAME = socket.gethostname() 
+   DOMAIN = socket.getfqdn()
+   DOMAIN_NAME = DOMAIN.strip(HOSTNAME+".")  
+   DOMAIN_NETWORK = socket.gethostbyname_ex(DOMAIN_NAME)
+   LOCAL_ADDRESSES = socket.gethostbyname_ex(HOSTNAME)
+   DOMAIN_NETWORK_IP = (sorted(DOMAIN_NETWORK[2])[0])   
+   LOCAL_IP_ADDRESS = (sorted(LOCAL_ADDRESSES[2])[0])   
 
-HOSTNAME = socket.gethostname()   
-IP_ADDRESS = socket.gethostbyname(HOSTNAME) #### IP conflict when virtuall network!!!  
-PORT = 8080
 CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))
 SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\Logos\logo.png')
-
 
 class SystemtrayIcon:
    def __init__(self,queue,parent_pid):
@@ -73,7 +78,7 @@ class Socketlisten:
    def listen(self,parent_pid):
       try:
          self.SOCKET_PARM = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-         self.SOCKET_PARM.bind((IP_ADDRESS, PORT))
+         self.SOCKET_PARM.bind((NetworkSettings.LOCAL_IP_ADDRESS, NetworkSettings.PORT))
          while True: 
             self.SOCKET_PARM.listen(5) 
             clientsocket, address = self.SOCKET_PARM.accept()
@@ -138,7 +143,7 @@ def alarm(device):
    height = round(screensize_height*0.99)
    root.geometry(f"{width}x{height}+0+0")
 
-   label_INFO = tk.Label(master=root, text=f"NOTFALL \n{device}",font=('Arial 70'),bg="yellow",fg="black")
+   label_INFO = tk.Label(master=root, text=f"NOTFALL \n{device}",font=('Arial 70 bold'),bg="yellow",fg="black")
    label_INFO.place(height=250, width=width, y=(height*0.08))
    alarm_sound = root.after(1000,alarmsound)
    Thread(target=alarm_sound)   
@@ -168,7 +173,7 @@ def send_threads(device):
       client_IP = CONFIG[device]["IPAddress"]
 
       client_name = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      client_name.connect((client_IP,PORT))
+      client_name.connect((client_IP,NetworkSettings.PORT))
    except (ConnectionError, TimeoutError, ConnectionRefusedError) as error:
       print(f"Sending alarm to: {client_IP} failed {error}")
 
@@ -183,8 +188,6 @@ def sending():
       except Exception as error:
          print(error,device)
          continue
-   for thread in threads:
-      thread.join()
    print(f"Threads: {len(threads)} finished")
 
 def create_processes(parent_pid):
@@ -211,6 +214,7 @@ if __name__ == "__main__":
    queue = Queue()
    parent = current_process()
    parent_pid = parent.pid
+   print(f"Hostname:   {NetworkSettings.HOSTNAME}\nDomain name:    {NetworkSettings.DOMAIN_NAME}\nDomain Controller IP-ADDRESS:   {NetworkSettings.DOMAIN_NETWORK_IP}\nLocal Host IP-ADDRESS:  {NetworkSettings.LOCAL_IP_ADDRESS}")
    print(f"\nParent process: {parent.pid}")
    create_processes(parent_pid) 
    
