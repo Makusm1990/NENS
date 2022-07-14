@@ -17,19 +17,25 @@ from pystray import Icon as icon, Menu as menu, MenuItem as item
 
 
 @dataclass(frozen=True)
-class NetworkSettings:
-   PORT = 8080
-   HOSTNAME = socket.gethostname()
-   DOMAIN = socket.getfqdn()
-   DOMAIN_NAME = DOMAIN.strip(HOSTNAME+".")
-   DOMAIN_NETWORK_ADRESSES = socket.gethostbyname_ex(DOMAIN_NAME)
-   LOCAL_ADDRESSES = socket.gethostbyname_ex(HOSTNAME)
-   DOMAIN_NETWORK_IP = (sorted(DOMAIN_NETWORK_ADRESSES[2])[0])
-   LOCAL_IP_ADDRESS = (sorted(LOCAL_ADDRESSES[2])[0])
+class NetworkSettings:                                                        # Class for configuration settings. This class is frozen, cannot be changed while code is running.
+   PORT = 8080                                                                # Default port for socket connection.
+   HOSTNAME = socket.gethostname()                                            # Host fullname.
+   DOMAIN = socket.getfqdn()                                                  # Get fully qualified domain name from default = HOSTNAME.
+   DOMAIN_NAME = DOMAIN.strip(HOSTNAME+".")                                   # Get domain name by stripping the hostname name.
+   DOMAIN_NETWORK_ADRESSES = socket.gethostbyname_ex(DOMAIN_NAME)             # Get all ip-addresses from domain name.
+   LOCAL_ADDRESSES = socket.gethostbyname_ex(HOSTNAME)                        # Get all ip-addresses from HOST.
+   DOMAIN_NETWORK_IP = (sorted(DOMAIN_NETWORK_ADRESSES[2])[0])                # Main DOMAIN NETWORK IP ADDRESS (DC01).
+   LOCAL_IP_ADDRESS = (sorted(LOCAL_ADDRESSES[2])[0])                         # Local host IP ADDRESS.
+   CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))        # Main configuration JSON file, which contains information for all clients, that uses the client_modul.
+   SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\Logos\logo.png')   # Path for logo, used by class SystemtrayIcon.
 
-   CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))
-   SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\Logos\logo.png')
-
+"""
+Class SystemtrayIcon is used to display the taskbar icon, which contains the following basic functions:
+   - function on_clicked_alarm: Initializing alert function (sending).
+   - function about_app: Displaying the "About" window with informations about versions number.
+   - function exit_session: Exits the program, first ends the child processes, then parent process and lastly the SystemtrayIcon_process itself.
+   - function systray: The main function from this class, it initializes the system tray icon itself with the menu.
+"""
 class SystemtrayIcon:
    def __init__(self,queue,parent_pid):
       self.queue = queue
@@ -39,7 +45,7 @@ class SystemtrayIcon:
    def on_clicked_alarm(self):
       sending()
 
-   def version_info(self):
+   def about_app(self):
       root = tk.Tk()
       root.geometry("250x100")
       root.title("About NENS")
@@ -68,7 +74,7 @@ class SystemtrayIcon:
    def systray(self,parent_pid):
       self.icon = icon("alarm", NetworkSettings.SYSTRAY_ICON, menu=menu(
                item("ALARM!!!",SystemtrayIcon.on_clicked_alarm),
-               item("About",SystemtrayIcon.version_info, ),
+               item("About",SystemtrayIcon.about_app, ),
                item("Exit" ,lambda : SystemtrayIcon.exit_session(self,parent_pid)),
             ))
       self.icon.run()
