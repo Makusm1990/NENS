@@ -6,6 +6,7 @@ import winsound
 import PIL.Image
 import tkinter as tk
 
+from dataclasses import dataclass
 from pynput import keyboard
 from threading import Thread
 from multiprocessing import Process,Queue,current_process
@@ -14,18 +15,20 @@ from tkinter import messagebox
 from multiprocessing import Process,Queue,freeze_support
 from pystray import Icon as icon, Menu as menu, MenuItem as item
 
+
+@dataclass(frozen=True)
 class NetworkSettings:  
    PORT = 8080    
    HOSTNAME = socket.gethostname() 
    DOMAIN = socket.getfqdn()
    DOMAIN_NAME = DOMAIN.strip(HOSTNAME+".")  
-   DOMAIN_NETWORK = socket.gethostbyname_ex(DOMAIN_NAME)
+   DOMAIN_NETWORK_ADRESSES = socket.gethostbyname_ex(DOMAIN_NAME)
    LOCAL_ADDRESSES = socket.gethostbyname_ex(HOSTNAME)
-   DOMAIN_NETWORK_IP = (sorted(DOMAIN_NETWORK[2])[0])   
+   DOMAIN_NETWORK_IP = (sorted(DOMAIN_NETWORK_ADRESSES[2])[0])   
    LOCAL_IP_ADDRESS = (sorted(LOCAL_ADDRESSES[2])[0])   
 
-CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))
-SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\Logos\logo.png')
+   CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))
+   SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\Logos\logo.png')
 
 class SystemtrayIcon:
    def __init__(self,queue,parent_pid):
@@ -63,7 +66,7 @@ class SystemtrayIcon:
       tray_pid.kill()
       
    def systray(self,parent_pid):
-      self.icon = icon("alarm", SYSTRAY_ICON, menu=menu(
+      self.icon = icon("alarm", NetworkSettings.SYSTRAY_ICON, menu=menu(
                item("ALARM!!!",SystemtrayIcon.on_clicked_alarm),
                item("About",SystemtrayIcon.version_info, ),
                item("Exit" ,lambda : SystemtrayIcon.exit_session(self,parent_pid)),
@@ -83,14 +86,14 @@ class Socketlisten:
          while True: 
             self.SOCKET_PARM.listen(5) 
             clientsocket, address = self.SOCKET_PARM.accept()
-            for x in CONFIG:
-               device = CONFIG[x]["Alias"]
-               if address[0] == CONFIG[x]["IPAddress"]:         
+            for x in NetworkSettings.CONFIG:
+               device = NetworkSettings.CONFIG[x]["Alias"]
+               if address[0] == NetworkSettings.CONFIG[x]["IPAddress"]:         
                   print(f"Alarm from {device}")
                   alarm(device)
       except Exception as error:
-         print("ERROR",error)
-         print("Already running")
+         print(error)
+         print("Client modul is already running")
          tray = os.getpid()
          tray_pid = psutil.Process(tray)
          parent_pid = psutil.Process(parent_pid)
@@ -182,18 +185,19 @@ def alarmsound():
 
 def send_threads(device):
    try:
-      client_name = CONFIG[device]["Name"]
-      client_IP = CONFIG[device]["IPAddress"]
+      client_name = NetworkSettings.CONFIG[device]["Name"]
+      client_IP = NetworkSettings.CONFIG[device]["IPAddress"]
 
       client_name = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      socket.setdefaulttimeout(2)
       client_name.connect((client_IP,NetworkSettings.PORT))
-   except (ConnectionError, TimeoutError, ConnectionRefusedError) as error:
-      print(f"Sending alarm to: {client_IP} failed {error}")
+   except (socket.error) as error:
+      print(f"Sending alarm to: {client_IP} failed. ERROR: {error}")
 
 def sending():   
    threads = [] 
-   print(len(CONFIG)) 
-   for device in CONFIG:
+   print(len(NetworkSettings.CONFIG)) 
+   for device in NetworkSettings.CONFIG:
       try:
          send = Thread(target=send_threads, args=(device,))
          threads.append(send)
@@ -206,15 +210,15 @@ def sending():
 def create_processes(parent_pid):
    child_processes = []
 
-   systemtry_thread = Process(target=SystemtrayIcon,name="Tray Icon", args=(queue,parent_pid))
-   socket_thread = Process(target=Socketlisten, name="Socket listener", args=(queue,parent_pid))
-   usb_button_thread = Process(target=USB_Taster, name="USB Buzzer")
-   keybord_thread = Process(target=Shortcut, name="Keybord shortcut")
+   systemtray_process = Process(target=SystemtrayIcon,name="Tray Icon", args=(queue,parent_pid))
+   socket_process = Process(target=Socketlisten, name="Socket listener", args=(queue,parent_pid))
+   usb_button_process = Process(target=USB_Taster, name="USB Buzzer")
+   keybord_process = Process(target=Shortcut, name="Keybord shortcut")
 
-   child_processes.append(keybord_thread)
-   child_processes.append(socket_thread)
-   child_processes.append(systemtry_thread)
-   child_processes.append(usb_button_thread)
+   child_processes.append(keybord_process)
+   child_processes.append(socket_process)
+   child_processes.append(systemtray_process)
+   child_processes.append(usb_button_process)
 
    for child in child_processes:
       try:
@@ -229,7 +233,7 @@ if __name__ == "__main__":
    queue = Queue()
    parent = current_process()
    parent_pid = parent.pid
-   print(f"Hostname:   {NetworkSettings.HOSTNAME}\nDomain name:    {NetworkSettings.DOMAIN_NAME}\nDomain Controller IP-ADDRESS:   {NetworkSettings.DOMAIN_NETWORK_IP}\nLocal Host IP-ADDRESS:  {NetworkSettings.LOCAL_IP_ADDRESS}")
+   print(f"Hostname: {NetworkSettings.HOSTNAME}\nDomain name: {NetworkSettings.DOMAIN_NAME}\nDomain Controller IP-ADDRESS: {NetworkSettings.DOMAIN_NETWORK_IP}\nLocal Host IP-ADDRESS: {NetworkSettings.LOCAL_IP_ADDRESS}")
    print(f"\nParent process: {parent.pid}")
    create_processes(parent_pid) 
    
