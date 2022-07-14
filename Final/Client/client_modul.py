@@ -10,22 +10,22 @@ from dataclasses import dataclass
 from pynput import keyboard
 from threading import Thread
 from multiprocessing import Process,Queue,current_process
-from ctypes import *
+from ctypes import windll
 from tkinter import messagebox
 from multiprocessing import Process,Queue,freeze_support
 from pystray import Icon as icon, Menu as menu, MenuItem as item
 
 
 @dataclass(frozen=True)
-class NetworkSettings:  
-   PORT = 8080    
-   HOSTNAME = socket.gethostname() 
+class NetworkSettings:
+   PORT = 8080
+   HOSTNAME = socket.gethostname()
    DOMAIN = socket.getfqdn()
-   DOMAIN_NAME = DOMAIN.strip(HOSTNAME+".")  
+   DOMAIN_NAME = DOMAIN.strip(HOSTNAME+".")
    DOMAIN_NETWORK_ADRESSES = socket.gethostbyname_ex(DOMAIN_NAME)
    LOCAL_ADDRESSES = socket.gethostbyname_ex(HOSTNAME)
-   DOMAIN_NETWORK_IP = (sorted(DOMAIN_NETWORK_ADRESSES[2])[0])   
-   LOCAL_IP_ADDRESS = (sorted(LOCAL_ADDRESSES[2])[0])   
+   DOMAIN_NETWORK_IP = (sorted(DOMAIN_NETWORK_ADRESSES[2])[0])
+   LOCAL_IP_ADDRESS = (sorted(LOCAL_ADDRESSES[2])[0])
 
    CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))
    SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\Logos\logo.png')
@@ -37,8 +37,8 @@ class SystemtrayIcon:
       self.systray(parent_pid)
 
    def on_clicked_alarm(self):
-      sending()   
-   
+      sending()
+
    def version_info(self):
       root = tk.Tk()
       root.geometry("250x100")
@@ -51,7 +51,7 @@ class SystemtrayIcon:
       exit_button.pack()
       root.mainloop()
 
-   def exit_session(self,parent_pid):      
+   def exit_session(self,parent_pid):
       tray = os.getpid()
       tray_pid = psutil.Process(tray)
       parent_pid = psutil.Process(parent_pid)
@@ -64,7 +64,7 @@ class SystemtrayIcon:
       parent_pid.kill()
       print(f"|\n|________ Closing child process: {tray_pid.pid} (Trayicon)\n")
       tray_pid.kill()
-      
+
    def systray(self,parent_pid):
       self.icon = icon("alarm", NetworkSettings.SYSTRAY_ICON, menu=menu(
                item("ALARM!!!",SystemtrayIcon.on_clicked_alarm),
@@ -83,12 +83,12 @@ class Socketlisten:
       try:
          self.SOCKET_PARM = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
          self.SOCKET_PARM.bind((NetworkSettings.LOCAL_IP_ADDRESS, NetworkSettings.PORT))
-         while True: 
-            self.SOCKET_PARM.listen(5) 
+         while True:
+            self.SOCKET_PARM.listen(5)
             clientsocket, address = self.SOCKET_PARM.accept()
             for x in NetworkSettings.CONFIG:
                device = NetworkSettings.CONFIG[x]["Alias"]
-               if address[0] == NetworkSettings.CONFIG[x]["IPAddress"]:         
+               if address[0] == NetworkSettings.CONFIG[x]["IPAddress"]:
                   print(f"Alarm from {device}")
                   alarm(device)
       except Exception as error:
@@ -106,11 +106,11 @@ class Socketlisten:
          parent_pid.kill()
          print(f"|\n|________ Closing child process: {tray_pid.pid} (Trayicon)\n")
          tray_pid.kill()
-         
+
 class USB_Taster:
    def __init__(self,*args):
       self.usb_listen()
-      
+
    def usb_listen(self):
     mydll=windll.LoadLibrary(r'\\dc01\netlogon\Notfall\USBaccessX64.dll')
     cw=mydll.FCWInitObject()
@@ -162,7 +162,7 @@ def alarm(device):
    label_INFO = tk.Label(master=root, text=f"NOTFALL \n{device}",font=('Arial 70 bold'),bg="yellow",fg="black")
    label_INFO.place(height=250, width=width, y=(height*0.08))
    alarm_sound = root.after(1000,alarmsound)
-   Thread(target=alarm_sound)   
+   Thread(target=alarm_sound)
    messagebox.showinfo(title=F"NOTFALL {device}",message="Meldung schließen?",icon="warning")
    #
    # Bestätigung an Sender schicken das die Meldung gelesen wurde
@@ -171,7 +171,7 @@ def alarm(device):
       root.destroy()
    except:
       print("Window already destroyed")
-   root.mainloop() 
+   root.mainloop()
 
 def alarmsound():
    print("alarmsound")
@@ -181,7 +181,7 @@ def alarmsound():
       winsound.Beep(freq, duration)
       duration = 800  # milliseconds
       freq = 1000  # Hz
-      winsound.Beep(freq, duration)    
+      winsound.Beep(freq, duration)
 
 def send_threads(device):
    try:
@@ -194,9 +194,9 @@ def send_threads(device):
    except (socket.error) as error:
       print(f"Sending alarm to: {client_IP} failed. ERROR: {error}")
 
-def sending():   
-   threads = [] 
-   print(len(NetworkSettings.CONFIG)) 
+def sending():
+   threads = []
+   print(len(NetworkSettings.CONFIG))
    for device in NetworkSettings.CONFIG:
       try:
          send = Thread(target=send_threads, args=(device,))
@@ -228,21 +228,11 @@ def create_processes(parent_pid):
          print(error)
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
    freeze_support()
    queue = Queue()
    parent = current_process()
    parent_pid = parent.pid
    print(f"Hostname: {NetworkSettings.HOSTNAME}\nDomain name: {NetworkSettings.DOMAIN_NAME}\nDomain Controller IP-ADDRESS: {NetworkSettings.DOMAIN_NETWORK_IP}\nLocal Host IP-ADDRESS: {NetworkSettings.LOCAL_IP_ADDRESS}")
    print(f"\nParent process: {parent.pid}")
-   create_processes(parent_pid) 
-   
-
-      
-   
-      
-      
-
-   
-      
-      
+   create_processes(parent_pid)
