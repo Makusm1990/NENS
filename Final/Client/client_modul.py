@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import socket
 import psutil
 import winsound
@@ -14,6 +15,8 @@ from ctypes import windll
 from tkinter import messagebox
 from multiprocessing import Process,Queue,freeze_support
 from pystray import Icon as icon, Menu as menu, MenuItem as item
+
+from check import running_status
 
 
 @dataclass(frozen=True)
@@ -205,10 +208,10 @@ def sending():
 def create_processes(parent_pid):
    child_processes = []
 
-   systemtray_process = Process(target=SystemtrayIcon,name="Tray Icon", args=(queue,parent_pid))
-   socket_process = Process(target=Socketlisten, name="Socket listener", args=(queue,parent_pid))
-   usb_button_process = Process(target=USB_Taster, name="USB Buzzer")
-   keybord_process = Process(target=Shortcut, name="Keybord shortcut")
+   systemtray_process = Process(target=SystemtrayIcon,name="SystemtrayIcon", args=(queue,parent_pid))
+   socket_process = Process(target=Socketlisten, name="Socketlisten", args=(queue,parent_pid))
+   usb_button_process = Process(target=USB_Taster, name="USB_Taster")
+   keybord_process = Process(target=Shortcut, name="Shortcut")
 
    child_processes.append(keybord_process)
    child_processes.append(socket_process)
@@ -221,6 +224,8 @@ def create_processes(parent_pid):
          print(f"|___Child process: {child.pid} // {child.name}")
       except Exception as error:
          print(error)
+   print(running_status(child_processes))
+
 
 
 if __name__ == "__main__":
