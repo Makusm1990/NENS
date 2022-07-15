@@ -224,8 +224,10 @@ def create_processes(parent_pid):
          print(f"|___Child process: {child.pid} // {child.name}")
       except Exception as error:
          print(error)
-   print(running_status(child_processes))
-
+   while True:
+      time.sleep(10)
+      if running_status(child_processes) != 1:
+         create_processes(parent_pid)
 
 
 if __name__ == "__main__":
