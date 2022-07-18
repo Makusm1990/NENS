@@ -1,5 +1,4 @@
-import psycopg
-
+import psycopg2
 
 def create_tables(cur_postgre_db,con_postgreSQL):
     try:
@@ -13,7 +12,7 @@ def create_tables(cur_postgre_db,con_postgreSQL):
         con_postgreSQL.commit()
         return print(f"\n-----------\nTable ready\n-----------")
 
-    except (Exception, psycopg.Error) as error:
+    except (Exception, psycopg2.Error) as error:
         print(error)
     con_postgreSQL.close()
 
@@ -27,6 +26,6 @@ def check_if_table_exists(cur_postgre_db,con_postgreSQL):
             create_tables(cur_postgre_db,con_postgreSQL)
         return print("Table already exsit... ")
 
-    except (Exception, psycopg.Error) as error:
+    except (Exception, psycopg2.Error) as error:
         print(error)
     con_postgreSQL.close()
