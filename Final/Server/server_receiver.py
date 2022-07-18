@@ -10,6 +10,7 @@ from time import sleep
 from dataclasses import dataclass
 from pystray import Icon as icon, Menu as menu, MenuItem as item
 from multiprocessing import Process,Queue,current_process,freeze_support
+from server_db_check import check_database
 
 
 @dataclass(frozen=True)
@@ -24,8 +25,7 @@ class NetworkSettings:                                                        # 
    LOCAL_IP_ADDRESS = (sorted(LOCAL_ADDRESSES[2])[0])                         # Local host IP ADDRESS.
    CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))        # Main configuration JSON file, which contains information for all clients, that uses the client_modul.
    SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\Logos\logo.png')   # Path for logo, used by class SystemtrayIcon.
-   DATABASE_CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\database.json'))
-
+   DATABASE_CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\database.json'))# Database connnection info
 
 class PostgreSQL:
    def __init__(self,device):
@@ -185,7 +185,6 @@ def create_processes(parent_pid):                                             # 
          create_processes(parent_pid)
 
 
-
 if __name__ == "__main__":
    freeze_support()
    queue = Queue()
@@ -193,4 +192,5 @@ if __name__ == "__main__":
    parent_pid = parent.pid
    print(f"Hostname: {NetworkSettings.HOSTNAME}\nDomain name: {NetworkSettings.DOMAIN_NAME}")
    print(f"Domain Controller IP-ADDRESS: {NetworkSettings.DOMAIN_NETWORK_IP}\nLocal Host IP-ADDRESS: {NetworkSettings.LOCAL_IP_ADDRESS}")
+   check_database()
    create_processes(parent_pid)
