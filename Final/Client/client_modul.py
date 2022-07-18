@@ -37,8 +37,8 @@ class SystemtrayIcon:                                                         # 
       self.parent_pid = parent_pid
       self.systray(parent_pid)
 
-   def on_clicked_alarm(self):                                                # - Initializing alert function (sending).
-      sending()
+   def on_clicked_alarm(self):                                                # - Initializing initialize_alert_threads.
+      initialize_alert_threads()
 
    def about_app(self):                                                       # - Displaying the "About" window with informations about versions number.
       root = tk.Tk()
@@ -107,13 +107,13 @@ class Socketlisten:                                                           # 
                device = NetworkSettings.CONFIG[x]["Alias"]
                if address[0] == NetworkSettings.CONFIG[x]["IPAddress"]:
                   print(f"Alarm from {device}")
-                  alarm(device)
+                  visual_alert(device)
       except Exception as error:
          print(error)
          print("Client modul is already running")
          self.kill_task(parent_pid)
 
-class USB_Taster:                                                             # If USB device is connected = True, listen to signal from usb device.
+class USB_Buzzer:                                                             # If USB device is connected = True, listen to signal from usb device.
    def __init__(self,*args):
       self.initialize_dll()
 
@@ -132,7 +132,7 @@ class USB_Taster:                                                             # 
          newstate = contact & 1
          if (state != newstate):
                if state == 1:
-                  sending()
+                  initialize_alert_threads()
          state = newstate
 
    def initialize_dll(self):                                                  # initialize USB Buzzer
@@ -142,12 +142,12 @@ class USB_Taster:                                                             # 
       self.check_device(devCnt)                                               # check if USB-Buzzer is present
       self.listen_on_usb(mydll)                                               # if present == True, go in listining state
 
-class Shortcut:                                                               # Binds a shortcut for triggering the alarm via keyboard
+class Key_Shortcut:                                                           # Binds a Key_shortcut for triggering the alarm via keyboard
    def __init__(self):
       self.listen_to_keybord()
 
    def on_press(self):
-    sending()
+    initialize_alert_threads()
 
    def listen_to_keybord(self):                                               # check if combination is pressed, when pressed -> sending alarm.
       hotkeys = ['<alt>+<ctrl>+n']
@@ -158,7 +158,7 @@ class Shortcut:                                                               # 
 
 
 
-def alarm(device):                                                            # Visual alert -> Window on screen 99%. Cant be closed while function alarmsoud is running (6,4sec)
+def visual_alert(device):                                                     # Visual alert -> Window on screen 99%. Cant be closed while function alarmsoud is running (6,4sec)
    root= tk.Tk()
    root.title('NOTFALL')
    root.iconbitmap(r'\\dc01\netlogon\Notfall\Logos\logo_small.ico')
@@ -172,7 +172,7 @@ def alarm(device):                                                            # 
 
    label_INFO = tk.Label(master=root, text=f"NOTFALL \n{device}",font=('Arial 70 bold'),bg="yellow",fg="black")
    label_INFO.place(height=250, width=width, y=(height*0.08))
-   alarm_sound = root.after(1000,alarmsound)
+   alarm_sound = root.after(1000,acustic_alert)
    Thread(target=alarm_sound)
    messagebox.showinfo(title=F"NOTFALL {device}",message="Meldung schließen?",icon="warning")
    try:
@@ -181,8 +181,8 @@ def alarm(device):                                                            # 
       print("Window already destroyed")
    root.mainloop()
 
-def alarmsound():                                                             # Acustic alert -> duration in milliseconds, freq in Hz
-   print("alarmsound")
+def acustic_alert():                                                          # Acustic alert -> duration in milliseconds, freq in Hz
+   print("acustic_alert")
    for x in range(4):
       duration = 800
       freq = 600
@@ -191,46 +191,46 @@ def alarmsound():                                                             # 
       freq = 1000
       winsound.Beep(freq, duration)
 
-def send_threads(device):
+
+def send_alert_thread(device):                                                # Established a connection to a given IP address
    try:
-      client_name = NetworkSettings.CONFIG[device]["Name"]
       client_IP = NetworkSettings.CONFIG[device]["IPAddress"]
-      client_name = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      client_parameter = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       socket.setdefaulttimeout(2)
-      client_name.connect((client_IP,NetworkSettings.PORT))
+      client_parameter.connect((client_IP,NetworkSettings.PORT))
    except (socket.error) as error:
       print(f"Sending alarm to: {client_IP} failed. ERROR: {error}")
 
-def sending():
+def initialize_alert_threads():                                               # Creates for each device in NetworkSettings.CONFIG a thread.
    threads = []
    print(f"Devices in Config: {len(NetworkSettings.CONFIG)}")
    for device in NetworkSettings.CONFIG:
       try:
-         send = Thread(target=send_threads, args=(device,))
-         threads.append(send)
-         send.start()
+         alert_thread = Thread(target=send_alert_thread, args=(device,))
+         threads.append(alert_thread)
+         alert_thread.start()
       except Exception as error:
          print(error,device)
          continue
    print(f"Threads: {len(threads)} finished")
 
 
-def check_child_processes(child_processes):
-    print(f"\nChecking child proccesses:\n")
+def check_child_processes(child_processes):                                   # Checks if all child processes are running returns state = 1 (running) or state 0 (not running)
+    print(f"\nChecking child processes:\n")
     state = 0
     for process in child_processes:
         check = psutil.pid_exists(process.pid)
-        if check == True:
+        if check == True:                                                     # Return = 1 (running)
             print(f"|___{process.name} running...")
             state = 1
-        else:
+        else:                                                                 # Return = 0 (not running) if one or more processes are not running, kills >ALL< child processes  -> returns 0
             print(f"|\n|_____{process.name} stopped!!! Restarting {process.name}...\n")
             for x in child_processes:
                 x.kill()
             state = 0
     return state
 
-def start_child_processes(child_processes):
+def start_child_processes(child_processes):                                   # Starts all child processes NetworkSettings, SystemtrayIcon, Socketlisten, USB_Buzzer, Key_Shortcut
    for child in child_processes:
       try:
          child.start()
@@ -238,20 +238,28 @@ def start_child_processes(child_processes):
       except Exception as error:
          print(error)
 
-def create_processes(parent_pid):
+def create_processes(parent_pid):                                             # Creates for each class a seperated process.
    child_processes = []
 
-   systemtray_process = Process(target=SystemtrayIcon,name="SystemtrayIcon", args=(queue,parent_pid))
-   socket_process = Process(target=Socketlisten, name="Socketlisten", args=(queue,parent_pid))
-   usb_button_process = Process(target=USB_Taster, name="USB_Taster")
-   keybord_process = Process(target=Shortcut, name="Shortcut")
+   systemtray_process = Process(
+      target=SystemtrayIcon,name="SystemtrayIcon", args=(queue,parent_pid)    # Queue -> Parent_pid to close processes from taskbar recursively.
+      )
+   socket_process = Process(
+      target=Socketlisten, name="Socketlisten", args=(queue,parent_pid)       # Queue -> Parent_pid to close all processes, because application is already running.
+      )
+   usb_button_process = Process(
+      target=USB_Buzzer, name="USB_Buzzer"
+      )
+   keybord_process = Process(
+      target=Key_Shortcut, name="Key_Shortcut"
+      )
 
    child_processes.append(keybord_process)
    child_processes.append(socket_process)
    child_processes.append(systemtray_process)
    child_processes.append(usb_button_process)
 
-   start_child_processes(child_processes) # starts all child processes
+   start_child_processes(child_processes)                                     # starts all child processes
 
    while True: # checks every 60s if all child processes are running, if nessescery restarts the child processes.
       sleep(60)
