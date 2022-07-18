@@ -7,14 +7,13 @@ import PIL.Image
 import tkinter as tk
 
 from time import sleep
-from dataclasses import dataclass
+from ctypes import windll
 from pynput import keyboard
 from threading import Thread
-from multiprocessing import Process,Queue,current_process
-from ctypes import windll
 from tkinter import messagebox
-from multiprocessing import Process,Queue,freeze_support
+from dataclasses import dataclass
 from pystray import Icon as icon, Menu as menu, MenuItem as item
+from multiprocessing import Process,Queue,current_process,freeze_support
 
 
 @dataclass(frozen=True)

@@ -1,13 +1,13 @@
-{ 
+{
     "device_244": {
         "Name": "H01R244",
         "Alias": "Anmeldung Haupteingang",
-        "IPAddress": "10.10.1.244" 
+        "IPAddress": "10.10.1.244"
         },
     "device_h01r37": {
         "Name": "H01R37",
         "Alias": "Technik-EDV",
-        "IPAddress": "10.10.1.37" 
+        "IPAddress": "10.10.1.37"
         },
     "device_1": {
         "Name": "Server",
@@ -73,7 +73,7 @@
         "Name": "H01R29",
         "Alias": "Arzt 3",
         "IPAddress": "10.10.1.29"
-        }, 	
+        },
     "device_14": {
         "Name": "H01R39",
         "Alias": "NUK Arzt 5 Dr.Fischer",
@@ -128,7 +128,7 @@
         "Name": "H01R47",
         "Alias": "Mammo",
         "IPAddress": "10.10.1.47"
-        }, 	
+        },
     "device_25": {
         "Name": "H01R22",
         "Alias": "MR-1",
