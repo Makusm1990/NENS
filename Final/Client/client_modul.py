@@ -1,12 +1,12 @@
 import os
 import json
-import time
 import socket
 import psutil
 import winsound
 import PIL.Image
 import tkinter as tk
 
+from time import sleep
 from dataclasses import dataclass
 from pynput import keyboard
 from threading import Thread
@@ -16,36 +16,35 @@ from tkinter import messagebox
 from multiprocessing import Process,Queue,freeze_support
 from pystray import Icon as icon, Menu as menu, MenuItem as item
 
-from check import running_status
-
 
 @dataclass(frozen=True)
-class NetworkSettings: # Class for configuration settings. This class is frozen, cannot be changed while code is running.
-   PORT = 8080 # Default port for socket connection.
-   HOSTNAME = socket.gethostname() # Host fullname.
-   DOMAIN = socket.getfqdn() # Get fully qualified domain name from default = HOSTNAME.
-   DOMAIN_NAME = DOMAIN.strip(HOSTNAME+".") # Get domain name by stripping the hostname name.
-   DOMAIN_NETWORK_ADRESSES = socket.gethostbyname_ex(DOMAIN_NAME) # Get all ip-addresses from domain name.
-   LOCAL_ADDRESSES = socket.gethostbyname_ex(HOSTNAME) # Get all ip-addresses from HOST.
-   DOMAIN_NETWORK_IP = (sorted(DOMAIN_NETWORK_ADRESSES[2])[0]) # Main DOMAIN NETWORK IP ADDRESS (DC01).
-   LOCAL_IP_ADDRESS = (sorted(LOCAL_ADDRESSES[2])[0]) # Local host IP ADDRESS.
-   CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json')) # Main configuration JSON file, which contains information for all clients, that uses the client_modul.
-   SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\Logos\logo.png') # Path for logo, used by class SystemtrayIcon.
+class NetworkSettings:                                                        # Class for configuration settings. This class is frozen, cannot be changed while code is running.
+   PORT = 8080                                                                # Default port for socket connection.
+   HOSTNAME = socket.gethostname()                                            # Host fullname.
+   DOMAIN = socket.getfqdn()                                                  # Get fully qualified domain name from default = HOSTNAME.
+   DOMAIN_NAME = DOMAIN.strip(HOSTNAME+".")                                   # Get domain name by stripping the hostname name.
+   DOMAIN_NETWORK_ADRESSES = socket.gethostbyname_ex(DOMAIN_NAME)             # Get all ip-addresses from domain name.
+   LOCAL_ADDRESSES = socket.gethostbyname_ex(HOSTNAME)                        # Get all ip-addresses from HOST.
+   DOMAIN_NETWORK_IP = (sorted(DOMAIN_NETWORK_ADRESSES[2])[0])                # Main DOMAIN NETWORK IP ADDRESS (DC01).
+   LOCAL_IP_ADDRESS = (sorted(LOCAL_ADDRESSES[2])[0])                         # Local host IP ADDRESS.
+   CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\configure.json'))        # Main configuration JSON file, which contains information for all clients, that uses the client_modul.
+   SYSTRAY_ICON = PIL.Image.open(r'\\dc01\netlogon\Notfall\Logos\logo.png')   # Path for logo, used by class SystemtrayIcon.
+   USB_BUZZER_DLL = (r'\\dc01\netlogon\Notfall\USBaccessX64.dll')             # Path for USB Buzzer dll.
 
-class SystemtrayIcon: # Used to display the taskbar icon, which contains the following basic functions:
+class SystemtrayIcon:                                                         # Used to display the taskbar icon, which contains the following basic functions:
    def __init__(self,queue,parent_pid):
       self.queue = queue
       self.parent_pid = parent_pid
       self.systray(parent_pid)
 
-   def on_clicked_alarm(self): # - function on_clicked_alarm: Initializing alert function (sending).
+   def on_clicked_alarm(self):                                                # - Initializing alert function (sending).
       sending()
 
-   def about_app(self): # - function about_app: Displaying the "About" window with informations about versions number.
+   def about_app(self):                                                       # - Displaying the "About" window with informations about versions number.
       root = tk.Tk()
       root.geometry("250x100")
       root.title("About NENS")
-      root.eval('tk::PlaceWindow . center') # center the "About" window on screen.
+      root.eval('tk::PlaceWindow . center')                                   # center the "About" window on screen.
       root.iconbitmap(r'\\dc01\netlogon\Notfall\Logos\logo_small.ico')
       label = tk.Label(root, text=f"Network Emergency Notification Service \nVersion: 1.0.0")
       label.pack(side="top", fill="x", pady=10)
@@ -53,14 +52,11 @@ class SystemtrayIcon: # Used to display the taskbar icon, which contains the fol
       exit_button.pack()
       root.mainloop()
 
-   def exit_session(self,parent_pid): # - function exit_session: Exits the program, first ends the child processes, then parent process and lastly the SystemtrayIcon_process itself.
-      tray = os.getpid() # Get the process ID from current process
+   def exit_session(self,parent_pid):                                         # - Exits the program, first ends the child processes, then parent process and lastly the SystemtrayIcon_process itself.
+      tray = os.getpid()                                                      # Get the process ID from current process
       tray_pid = psutil.Process(tray)
-      parent_pid = psutil.Process(parent_pid) # Get process ID from parent process
-      """
-      Closing all child processes recursively for child process in parent.pid.
-      Ends the programm completly.
-      """
+      parent_pid = psutil.Process(parent_pid)                                 # Get process ID from parent process
+
       for child in parent_pid.children(recursive=True):
          if child.pid != tray:
             print(f"|   |_____ Closing child process: {child.pid}" )
@@ -70,7 +66,7 @@ class SystemtrayIcon: # Used to display the taskbar icon, which contains the fol
       print(f"|\n|________ Closing child process: {tray_pid.pid} (Trayicon)\n")
       tray_pid.kill()
 
-   def systray(self,parent_pid): # - function systray: The main function from this class, it initializes the system tray icon itself with the menu.
+   def systray(self,parent_pid):                                              # - The main function from this class, it initializes the system tray icon itself with the menu.
       self.icon = icon("alarm", NetworkSettings.SYSTRAY_ICON, menu=menu(
                item("ALARM!!!",SystemtrayIcon.on_clicked_alarm),
                item("About",SystemtrayIcon.about_app, ),
@@ -78,20 +74,36 @@ class SystemtrayIcon: # Used to display the taskbar icon, which contains the fol
             ))
       self.icon.run()
 
-class Socketlisten: # Binds the current host ip address at PORT from class NetworkSettings, while true listens to connections from alarm-clients, if connection is established starts def alarm.
-   def __init__(self,queue,parent_pid):
+class Socketlisten:                                                           # Binds the current host ip address at PORT from class NetworkSettings,
+   def __init__(self,queue,parent_pid):                                       # while true listens to connections from alarm-clients, if connection is established starts def alarm.
       self.queue = queue
       self.parent_pid = parent_pid
       self.listen(parent_pid)
 
-   def listen(self,parent_pid): # Listen for connections, if connection is true AND device is registred -> sends alert to all known devices.
+   def kill_task(self,parent_pid):
+      tray = os.getpid()
+      tray_pid = psutil.Process(tray)
+      parent_pid = psutil.Process(parent_pid)
+
+      for child in parent_pid.children(recursive=True):
+         if child.pid != tray:
+            print(f"|   |_____ Closing child process: {child.pid}" )
+            child.kill()
+      print(f"|\n|_____Closing parent process: {parent_pid.pid}")
+      parent_pid.kill()
+      print(f"|\n|________ Closing child process: {tray_pid.pid} (Trayicon)\n")
+      tray_pid.kill()
+
+   def listen(self,parent_pid):                                               # Listen for connections, if connection is true AND device is registred -> sends alert to all known devices.
       try:
          self.SOCKET_PARM = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-         self.SOCKET_PARM.bind((NetworkSettings.LOCAL_IP_ADDRESS, NetworkSettings.PORT)) # Binds the local host ip-address
+         self.SOCKET_PARM.bind(
+            (NetworkSettings.LOCAL_IP_ADDRESS, NetworkSettings.PORT)          # Binds the local host ip-address + PORT
+            )
          while True:
             self.SOCKET_PARM.listen(5)
-            clientsocket, address = self.SOCKET_PARM.accept() # accepts connections at PORT from class NetworkSettings
-            for x in NetworkSettings.CONFIG: # Checks if device is registred in CONIG JSON  
+            clientsocket, address = self.SOCKET_PARM.accept()                 # accepts connections at PORT from class NetworkSettings
+            for x in NetworkSettings.CONFIG:                                  # Checks if device is registred in CONIG JSON
                device = NetworkSettings.CONFIG[x]["Alias"]
                if address[0] == NetworkSettings.CONFIG[x]["IPAddress"]:
                   print(f"Alarm from {device}")
@@ -99,57 +111,54 @@ class Socketlisten: # Binds the current host ip address at PORT from class Netwo
       except Exception as error:
          print(error)
          print("Client modul is already running")
+         self.kill_task(parent_pid)
+
+class USB_Taster:                                                             # If USB device is connected = True, listen to signal from usb device.
+   def __init__(self,*args):
+      self.initialize_dll()
+
+   def check_device(self,devCnt):                                             # Checks if USB-Buzzer is connected or not.
+      if (devCnt != 1) :
+         print(f"|\n|   No USB device found")
          tray = os.getpid()
          tray_pid = psutil.Process(tray)
-         parent_pid = psutil.Process(parent_pid)
-
-         for child in parent_pid.children(recursive=True):
-            if child.pid != tray:
-               print(f"|   |_____ Closing child process: {child.pid}" )
-               child.kill()
-         print(f"|\n|_____Closing parent process: {parent_pid.pid}")
-         parent_pid.kill()
-         print(f"|\n|________ Closing child process: {tray_pid.pid} (Trayicon)\n")
+         print(f"|___Closing child process: {tray}")
          tray_pid.kill()
 
-class USB_Taster: # If USB device is connected = True, listen to signal from usb device.
-   def __init__(self,*args):
-      self.usb_listen()
+   def listen_on_usb(self,mydll):                                             # while usb device is connected, listen to change on state, if usb device is triggered start function sending.
+      state = 0
+      while (1) :
+         contact = mydll.FCWGetContact(0, 0)
+         newstate = contact & 1
+         if (state != newstate):
+               if state == 1:
+                  sending()
+         state = newstate
 
-   def usb_listen(self):
-    mydll=windll.LoadLibrary(r'\\dc01\netlogon\Notfall\USBaccessX64.dll') # loading dll for usb device
-    cw=mydll.FCWInitObject()
-    devCnt=mydll.FCWOpenCleware(0)
-    if (devCnt != 1) :
-      print(f"|\n|   No USB device found")
-      tray = os.getpid()
-      tray_pid = psutil.Process(tray)
-      print(f"|___Closing child process: {tray}")
-      tray_pid.kill()
+   def initialize_dll(self):                                                  # initialize USB Buzzer
+      mydll=windll.LoadLibrary(NetworkSettings.USB_BUZZER_DLL)                # load libary
+      cw=mydll.FCWInitObject()                                                # specify function
+      devCnt=mydll.FCWOpenCleware(0)                                          # bind default 0 to buzzer
+      self.check_device(devCnt)                                               # check if USB-Buzzer is present
+      self.listen_on_usb(mydll)                                               # if present == True, go in listining state
 
-    state = 0
-
-    while (1) : # while usb device is connected, listen to change on state, if usb device is triggered start function sending.
-        contact = mydll.FCWGetContact(0, 0)
-        newstate = contact & 1
-        if (state != newstate):
-            if state == 1:
-                sending()
-        state = newstate
-
-class Shortcut: # Binds a shortcut for triggering the alarm
+class Shortcut:                                                               # Binds a shortcut for triggering the alarm via keyboard
    def __init__(self):
       self.listen_to_keybord()
 
    def on_press(self):
     sending()
 
-   def listen_to_keybord(self):
-      with keyboard.GlobalHotKeys({
-            '<alt>+<ctrl>+n': self.on_press,}) as pressed:
-         pressed.join()
+   def listen_to_keybord(self):                                               # check if combination is pressed, when pressed -> sending alarm.
+      hotkeys = ['<alt>+<ctrl>+n']
+      for combination in hotkeys:
+         with keyboard.GlobalHotKeys({
+            combination: self.on_press,}) as pressed:
+            pressed.join()
 
-def alarm(device): # Visual alert -> Window on screen 99%. Cant be closed while function alarmsoud is running (6,4sec)
+
+
+def alarm(device):                                                            # Visual alert -> Window on screen 99%. Cant be closed while function alarmsoud is running (6,4sec)
    root= tk.Tk()
    root.title('NOTFALL')
    root.iconbitmap(r'\\dc01\netlogon\Notfall\Logos\logo_small.ico')
@@ -172,7 +181,7 @@ def alarm(device): # Visual alert -> Window on screen 99%. Cant be closed while 
       print("Window already destroyed")
    root.mainloop()
 
-def alarmsound(): # Acustic alert -> duration in milliseconds, freq in Hz
+def alarmsound():                                                             # Acustic alert -> duration in milliseconds, freq in Hz
    print("alarmsound")
    for x in range(4):
       duration = 800
@@ -194,7 +203,7 @@ def send_threads(device):
 
 def sending():
    threads = []
-   print(len(NetworkSettings.CONFIG))
+   print(f"Devices in Config: {len(NetworkSettings.CONFIG)}")
    for device in NetworkSettings.CONFIG:
       try:
          send = Thread(target=send_threads, args=(device,))
@@ -204,6 +213,30 @@ def sending():
          print(error,device)
          continue
    print(f"Threads: {len(threads)} finished")
+
+
+def check_child_processes(child_processes):
+    print(f"\nChecking child proccesses:\n")
+    state = 0
+    for process in child_processes:
+        check = psutil.pid_exists(process.pid)
+        if check == True:
+            print(f"|___{process.name} running...")
+            state = 1
+        else:
+            print(f"|\n|_____{process.name} stopped!!! Restarting {process.name}...\n")
+            for x in child_processes:
+                x.kill()
+            state = 0
+    return state
+
+def start_child_processes(child_processes):
+   for child in child_processes:
+      try:
+         child.start()
+         print(f"|___Child process: {child.pid} // {child.name}")
+      except Exception as error:
+         print(error)
 
 def create_processes(parent_pid):
    child_processes = []
@@ -218,15 +251,11 @@ def create_processes(parent_pid):
    child_processes.append(systemtray_process)
    child_processes.append(usb_button_process)
 
-   for child in child_processes:
-      try:
-         child.start()
-         print(f"|___Child process: {child.pid} // {child.name}")
-      except Exception as error:
-         print(error)
-   while True:
-      time.sleep(10)
-      if running_status(child_processes) != 1:
+   start_child_processes(child_processes) # starts all child processes
+
+   while True: # checks every 60s if all child processes are running, if nessescery restarts the child processes.
+      sleep(60)
+      if check_child_processes(child_processes) != 1:
          create_processes(parent_pid)
 
 
@@ -235,6 +264,7 @@ if __name__ == "__main__":
    queue = Queue()
    parent = current_process()
    parent_pid = parent.pid
-   print(f"Hostname: {NetworkSettings.HOSTNAME}\nDomain name: {NetworkSettings.DOMAIN_NAME}\nDomain Controller IP-ADDRESS: {NetworkSettings.DOMAIN_NETWORK_IP}\nLocal Host IP-ADDRESS: {NetworkSettings.LOCAL_IP_ADDRESS}")
+   print(f"Hostname: {NetworkSettings.HOSTNAME}\nDomain name: {NetworkSettings.DOMAIN_NAME}")
+   print(f"Domain Controller IP-ADDRESS: {NetworkSettings.DOMAIN_NETWORK_IP}\nLocal Host IP-ADDRESS: {NetworkSettings.LOCAL_IP_ADDRESS}")
    print(f"\nParent process: {parent.pid}")
    create_processes(parent_pid)
