@@ -1,19 +1,20 @@
 import psycopg2
 import json
 from server_db_tables import check_if_table_exists
+import cryptocode
 
 
 def check_database():
     DATABASE_CONFIG = json.load(open(r'\\dc01\netlogon\Notfall\database.json')) # Database connnection info
-
     try:
         con_postgreSQL = psycopg2.connect(
             host = DATABASE_CONFIG["HOSTNAME"],
             dbname = DATABASE_CONFIG["DATABASE"],
             user = DATABASE_CONFIG["USERNAME"],
-            password = DATABASE_CONFIG["PWD"],
+            password = (cryptocode.decrypt(DATABASE_CONFIG["PWD"], "encrypt")),
             port = DATABASE_CONFIG["PORT_ID"]
         )
+
         if (con_postgreSQL.closed) == False:
             print("Credentials correct.")
             # check if tables already exsits
