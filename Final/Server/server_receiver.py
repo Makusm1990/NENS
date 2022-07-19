@@ -2,7 +2,7 @@ import os
 import json
 import socket
 import psutil
-import base64
+import cryptocode
 import psycopg2
 import PIL.Image
 import tkinter as tk
@@ -35,7 +35,7 @@ class PostgreSQL:
          host = NetworkSettings.DATABASE_CONFIG["HOSTNAME"],
          dbname = NetworkSettings.DATABASE_CONFIG["DATABASE"],
          user = NetworkSettings.DATABASE_CONFIG["USERNAME"],
-         password = NetworkSettings.DATABASE_CONFIG["PWD"],
+         password = (cryptocode.decrypt(NetworkSettings.DATABASE_CONFIG["PWD"], "encrypt")),
          port = NetworkSettings.DATABASE_CONFIG["PORT_ID"]
          ) as connection:
             with connection.cursor() as cur_postgre_db:
