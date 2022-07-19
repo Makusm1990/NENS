@@ -1,7 +1,7 @@
 {
-    "HOSTNAME" : "bG9jYWxob3N0",
-    "DATABASE" : "Tm90ZmFsbA==",
-    "USERNAME" : "cG9zdGdyZXM=",
-    "PWD" : "R2VzaW5lQnVzZGllMS4=",
-    "PORT_ID" : "NTQzMg=="
+    "HOSTNAME"  : "localhost",
+    "DATABASE"  : "Notfall",
+    "USERNAME"  : "postgres",
+    "PWD"       : "",
+    "PORT_ID"   : "5432"
 }

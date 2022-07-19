@@ -32,16 +32,11 @@ class PostgreSQL:
       print("Connecting to PostgreSQL database...")
       try:
          with psycopg2.connect(
-         host = base64.b64decode(
-            (NetworkSettings.DATABASE_CONFIG["HOSTNAME"]).encode('ascii')).decode('ascii'),
-         dbname = base64.b64decode(
-            (NetworkSettings.DATABASE_CONFIG["DATABASE"]).encode('ascii')).decode('ascii'),
-         user = base64.b64decode(
-            (NetworkSettings.DATABASE_CONFIG["USERNAME"]).encode('ascii')).decode('ascii'),
-         password = base64.b64decode(
-            (NetworkSettings.DATABASE_CONFIG["PWD"]).encode('ascii')).decode('ascii'),
-         port = base64.b64decode(
-            (NetworkSettings.DATABASE_CONFIG["PORT_ID"]).encode('ascii')).decode('ascii')
+         host = NetworkSettings.DATABASE_CONFIG["HOSTNAME"],
+         dbname = NetworkSettings.DATABASE_CONFIG["DATABASE"],
+         user = NetworkSettings.DATABASE_CONFIG["USERNAME"],
+         password = NetworkSettings.DATABASE_CONFIG["PWD"],
+         port = NetworkSettings.DATABASE_CONFIG["PORT_ID"]
          ) as connection:
             with connection.cursor() as cur_postgre_db:
                print("connection established!")
