@@ -213,7 +213,7 @@ def initialize_alert_threads():                                               # 
          continue
    print(f"Threads: {len(threads)} finished")
 
-
+"""
 def check_child_processes(child_processes):                                   # Checks if all child processes are running returns state = 1 (running) or state 0 (not running)
     print(f"\nChecking child processes:\n")
     state = 0
@@ -228,7 +228,7 @@ def check_child_processes(child_processes):                                   # 
                 x.kill()
             state = 0
     return state
-
+"""
 def start_child_processes(child_processes):                                   # Starts all child processes NetworkSettings, SystemtrayIcon, Socketlisten, USB_Buzzer, Key_Shortcut
    for child in child_processes:
       try:
@@ -259,12 +259,12 @@ def create_processes(parent_pid):                                             # 
    child_processes.append(usb_button_process)
 
    start_child_processes(child_processes)                                     # starts all child processes
-
+   """
    while True: # checks every 60s if all child processes are running, if nessescery restarts the child processes.
       sleep(60)
       if check_child_processes(child_processes) != 1:
          create_processes(parent_pid)
-
+   """
 
 if __name__ == "__main__":
    freeze_support()

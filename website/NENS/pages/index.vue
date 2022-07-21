@@ -3,6 +3,7 @@
     <v-card-title>
       <v-text-field
         v-model="search"
+        placeholder="Datum Format YYYY-MM-DD"
         append-icon="mdi-magnify"
         label="Search"
         single-line
@@ -18,6 +19,13 @@
       <template v-slot:item.date="{item}">
         {{formatTimestamp(item)}}
       </template>
+
+      <template v-slot:item.id="{item}">
+        <nuxt-link :to="'/Notfall_ID/' + item.id">
+          {{item.id}}
+        </nuxt-link>
+      </template>
+
     </v-data-table>
   </v-card>
 </template>

@@ -51,11 +51,6 @@ export default {
           title: 'Startseite',
           to: '/',
         },
-        {
-          icon: 'mdi-chart-bubble',
-          title: 'Inspire',
-          to: '/inspire',
-        },
       ],
     }
   },
