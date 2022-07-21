@@ -51,6 +51,11 @@ export default {
           title: 'Startseite',
           to: '/',
         },
+        {
+          icon: 'mdi-cards-variant',
+          title: 'Configure',
+          to: '/config',
+        },
       ],
     }
   },

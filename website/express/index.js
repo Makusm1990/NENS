@@ -56,9 +56,6 @@ app.get("/Notfall_ID/:id", async (req, res) => {
 
 
 
-
-
-
 // app listen
 app.listen(8080, () => console.log('Listening on Port 8080...'))
 
