@@ -1,7 +1,7 @@
 <template>
   <v-card>
 
-  <v-card v-for="item in configure" :key="item.Alias"> {{}} {{ item.Name }} -- {{ item.Alias }} -- {{ item.IPAddress }}</v-card>
+  <v-card v-for="item in configure" :key="item.Alias"> {{ item.Name }} -- {{ item.Alias }} -- {{ item.IPAddress }}</v-card>
 
   </v-card>
 </template>
