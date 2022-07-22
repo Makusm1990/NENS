@@ -8,7 +8,6 @@ import PIL.Image
 import tkinter as tk
 import win32gui, win32con
 
-from time import sleep
 from ctypes import windll
 from pynput import keyboard
 from threading import Thread
