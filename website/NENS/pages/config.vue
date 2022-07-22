@@ -1,21 +1,26 @@
 <template>
- 
-  <v-container class="devices">
-    <v-layout row wrap class="card">
-      <v-flex v-for="(item, deviceId) in configure" :key="item.Name">
-       <v-card class="card">
-        {{deviceId}}
-       <v-card-text >
-        <div class="info">{{ item.Name }}</div>
-        <div class="card">{{ item.Alias }}</div>
-        <div class="info">{{ item.IPAddress }}</div>
-       </v-card-text>
-        </v-card>
-      </v-flex>
-    </v-layout>
-  </v-container>
-
-
+  <div class="container">
+    <table class="table">
+      <thead class="card">
+        <tr>
+          <th>Geräte ID</th>
+          <th>Host Name</th>
+          <th>Alias</th>
+          <th>IP Adresse</th>
+          <th></th>
+        </tr>
+      </thead>
+        <tbody >
+          <tr v-for="(item, deviceId) in configure" :key="item.Name">
+            <td>{{deviceId}}</td>
+            <td>{{item.Name}}</td>
+            <td>{{item.Alias}}</td>
+            <td>{{item.IPAddress}}</td>
+            <td><v-btn>bearbeiten</v-btn></td>
+          </tr>
+        </tbody>
+    </table>
+  </div>
 </template>
 
 <script>
@@ -44,26 +49,6 @@
 </script>
 
 <style>
-table{
-  color: whitesmoke;
-}
-.card {
-  padding: 0.1rem;
-  background-color: #B9B9B7;
-  border: 1px solid red;
-  color: red;
-  font-size: 1.35rem;
-  text-align: center !important;
-  margin: auto;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
-  flex: auto;
-}
-.info{
-  font-size: 1.5rem;
-  color: black;
-}
+
 
 </style>
