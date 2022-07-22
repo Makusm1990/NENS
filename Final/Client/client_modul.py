@@ -1,3 +1,4 @@
+from cgitb import text
 import os
 import json
 import socket
@@ -5,12 +6,14 @@ import psutil
 import winsound
 import PIL.Image
 import tkinter as tk
+import win32gui, win32con
 
 from time import sleep
 from ctypes import windll
 from pynput import keyboard
 from threading import Thread
-from tkinter import messagebox
+from datetime import datetime
+from tkinter import Label, messagebox
 from dataclasses import dataclass
 from pystray import Icon as icon, Menu as menu, MenuItem as item
 from multiprocessing import Process,Queue,current_process,freeze_support
@@ -155,29 +158,41 @@ class Key_Shortcut:                                                           # 
             combination: self.on_press,}) as pressed:
             pressed.join()
 
+def minimize_all_windows(hwnd, ctx):                                          # Minimize all open windows. For the visual alert is being present!
+    if win32gui.IsWindowVisible(hwnd):
+        if win32gui.GetWindowText(hwnd) != "":
+            win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
 
 
 def visual_alert(device):                                                     # Visual alert -> Window on screen 99%. Cant be closed while function alarmsoud is running (6,4sec)
+   win32gui.EnumWindows(minimize_all_windows, None)                           # Minimize all open windows.
+   date_time = datetime.now().strftime("%H:%M:%S")                            # current date and time
+
    root= tk.Tk()
    root.title('NOTFALL')
    root.iconbitmap(r'\\dc01\netlogon\Notfall\Logos\logo_small.ico')
    root.configure(background='red')
 
-   screensize_width = root.winfo_screenwidth()
-   width = round(screensize_width*0.99)
-   screensize_height = root.winfo_screenheight()
-   height = round(screensize_height*0.99)
+   width = round((root.winfo_screenwidth())*0.99)
+   height = round((root.winfo_screenheight())*0.99)
+
    root.geometry(f"{width}x{height}+0+0")
 
    label_INFO = tk.Label(master=root, text=f"NOTFALL \n{device}",font=('Arial 70 bold'),bg="yellow",fg="black")
    label_INFO.place(height=250, width=width, y=(height*0.08))
+
+   date = tk.Label(root,text=f"Ausgelöst um: {date_time}",font=('Arial 70 bold'),bg="yellow",fg="black")
+   date.place(height=125,width=width, y=(height*0.8))
+
    alarm_sound = root.after(1000,acustic_alert)
    Thread(target=alarm_sound)
-   messagebox.showinfo(title=F"NOTFALL {device}",message="Meldung schließen?",icon="warning")
-   try:
-      root.destroy()
-   except:
-      print("Window already destroyed")
+
+   def on_closing():
+    if messagebox.askokcancel("Beenden", "Meldung schließen?"):
+        root.destroy()
+
+   root.protocol("WM_DELETE_WINDOW", on_closing)
+   root.after(300000, root.destroy)                                           # Destroys the root.window after 300000 milliseconds ~ 5 minutes.
    root.mainloop()
 
 def acustic_alert():                                                          # Acustic alert -> duration in milliseconds, freq in Hz
@@ -189,7 +204,6 @@ def acustic_alert():                                                          # 
       duration = 800
       freq = 1000
       winsound.Beep(freq, duration)
-
 
 def send_alert_thread(device):                                                # Established a connection to a given IP address
    try:
@@ -229,6 +243,7 @@ def check_child_processes(child_processes):                                   # 
             state = 0
     return state
 """
+
 def start_child_processes(child_processes):                                   # Starts all child processes NetworkSettings, SystemtrayIcon, Socketlisten, USB_Buzzer, Key_Shortcut
    for child in child_processes:
       try:
