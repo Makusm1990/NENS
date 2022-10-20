@@ -29,4 +29,3 @@ def check_if_table_exists(cur_postgre_db,con_postgreSQL):
     except (Exception, psycopg2.Error) as error:
         print(error)
     con_postgreSQL.close()
-

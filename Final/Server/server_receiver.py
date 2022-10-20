@@ -6,7 +6,9 @@ import cryptocode
 import psycopg2
 import PIL.Image
 import tkinter as tk
+
 from time import sleep
+from threading import Thread
 from dataclasses import dataclass
 from pystray import Icon as icon, Menu as menu, MenuItem as item
 from multiprocessing import Process,Queue,current_process,freeze_support
@@ -15,7 +17,7 @@ from server_db_check import check_database
 
 @dataclass(frozen=True)
 class NetworkSettings:                                                        # Class for configuration settings. This class is frozen, cannot be changed while code is running.
-   PORT = 8080                                                                # Default port for socket connection.
+   PORT = 63000                                                               # Default port for socket connection.
    HOSTNAME = socket.gethostname()                                            # Host fullname.
    DOMAIN = socket.getfqdn()                                                  # Get fully qualified domain name from default = HOSTNAME.
    DOMAIN_NAME = DOMAIN.strip(HOSTNAME+".")                                   # Get domain name by stripping the hostname name.
@@ -64,6 +66,9 @@ class SystemtrayIcon:                                                         # 
       self.parent_pid = parent_pid
       self.systray(parent_pid)
 
+   def on_clicked_alarm(self):                                                # - Initializing initialize_alert_threads.
+      initialize_alert_threads()
+
    def about_app(self):                                                       # - Displaying the "About" window with informations about versions number.
       root = tk.Tk()
       root.geometry("250x100")
@@ -92,6 +97,7 @@ class SystemtrayIcon:                                                         # 
 
    def systray(self,parent_pid):                                              # - The main function from this class, it initializes the system tray icon itself with the menu.
       self.icon = icon("alarm", NetworkSettings.SYSTRAY_ICON, menu=menu(
+               item("ALARM!!!",SystemtrayIcon.on_clicked_alarm),
                item("About",SystemtrayIcon.about_app, ),
                item("Exit" ,lambda : SystemtrayIcon.exit_session(self,parent_pid)),
             ))
@@ -179,6 +185,27 @@ def create_processes(parent_pid):                                             # 
       if check_child_processes(child_processes) != 1:
          create_processes(parent_pid)
 
+def send_alert_thread(device):                                                # Established a connection to a given IP address
+   try:
+      client_IP = NetworkSettings.CONFIG[device]["IPAddress"]
+      client_parameter = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      socket.setdefaulttimeout(2)
+      client_parameter.connect((client_IP,NetworkSettings.PORT))
+   except (socket.error) as error:
+      print(f"Sending alarm to: {client_IP} failed. ERROR: {error}")
+
+def initialize_alert_threads():                                               # Creates for each device in NetworkSettings.CONFIG a thread.
+   threads = []
+   print(f"Devices in Config: {len(NetworkSettings.CONFIG)}")
+   for device in NetworkSettings.CONFIG:
+      try:
+         alert_thread = Thread(target=send_alert_thread, args=(device,))
+         threads.append(alert_thread)
+         alert_thread.start()
+      except Exception as error:
+         print(error,device)
+         continue
+   print(f"Threads: {len(threads)} finished")
 
 if __name__ == "__main__":
    freeze_support()
