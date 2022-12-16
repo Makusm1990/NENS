@@ -1,24 +1,23 @@
-import sys
-from PyQt5.QtWidgets import QApplication, QLabel
 import requests
-import json
 
-def get_github_user(username):
-    api_url = f'https://api.github.com/users/{username}'
-    response = requests.get(api_url)
+URL = "https://api.github.com/repos/Makusm1990/NENS/commits"
+
+params = {
+    "sha": "HEAD",
+}
+
+
+try:
+    response = requests.get(URL, params=params)
     if response.status_code == 200:
-        user_info = json.loads(response.content.decode('utf-8'))
-        return user_info
+        commits = response.json()
+        for commit in commits:
+            print(commit["commit"]["message"])
+        latest_commit = commits[0]
+        print(latest_commit["commit"]["message"])
     else:
-        return None
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    user_info = get_github_user('octocat')
-    if user_info:
-        label = QLabel(f'Username: {user_info["login"]}')
-        label.show()
-    else:
-        label = QLabel('User not found')
-        label.show()
-    sys.exit(app.exec_())
+        print(f"Request failed with status code {response.status_code}")
+except requests.RequestException as e:
+    print(f"There was an error making the request: {e}")
+except ValueError as e:
+    print(f"There was an error parsing the response as JSON: {e}")

@@ -1,83 +1,68 @@
 import sys
-import os
-import pprint
 import requests
-
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QDesktopWidget, QPushButton, QHBoxLayout
-from PyQt5.QtCore import Qt, QUrl
-from PyQt5.QtGui import QIcon, QDesktopServices
-
 from datetime import datetime
 
-
-# Erstelle eine QApplication (erforderlich, um eine GUI zu erstellen)
-app = QApplication(sys.argv)
-
-# Erstelle das Hauptfenster
-window = QWidget()
-window.setWindowTitle("NENS Update Service")
-# Set the window icon
-icon = QIcon(r'\\dc01\netlogon\Notfall\Logos\logo.png')
-window.setWindowIcon(icon)
-# Set the size and position of the window
-window.resize(400, 200)
-
-# Get the screen dimensions
-screen = QDesktopWidget().screenGeometry()
-
-# Calculate the center position of the screen
-x = (screen.width() - window.width()) // 2
-y = (screen.height() - window.height()) // 2
-
-# Move the window to the center of the screen
-window.move(x, y)
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (
+    QApplication,
+    QDesktopWidget,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+from PyQt5.QtGui import QDesktopServices
 
 
+URL_GITHUB_MAIN = "https://github.com/Makusm1990/NENS/raw/main/Final/.exe/"
+URL_GITHUB_REPOS = "https://api.github.com/user/repos"
 
-# Setze den Zugriffstoken in einer Umgebungsvariable
-access_token = "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"
+GIT_TOKEN = "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"
 
-# Setze den API-Endpunkt und die Autorisierungsheader
-url = "https://api.github.com/user/repos"
-headers = {"Authorization": f"Bearer {access_token}"}
+headers = {"Authorization": f"Bearer {GIT_TOKEN}"}
 
-# Sende die Anforderung und speichere die Antwort
-response = requests.get(url, headers=headers)
+response = requests.get(URL_GITHUB_REPOS, headers=headers)
 repositories = response.json()
 
-# Durchlaufe die Liste der Repositories und drucke den Namen jedes Repositorys aus
 for repository in repositories:
     if repository["full_name"] == "Makusm1990/NENS":
         last_update = repository["pushed_at"]
-
         update_date = datetime.strptime(last_update, "%Y-%m-%dT%H:%M:%SZ")
-        formatted_timestamp = update_date.strftime("%d.%B %Y, %H:%M Uhr")
+        formatted_timestamp = update_date.strftime("%d.%B %Y")
+        break
 
+app = QApplication(sys.argv)
+window = QWidget()
+window.setWindowTitle("NENS Update Service")
+window.setWindowIcon(QIcon(r"\\dc01\netlogon\Notfall\Logos\logo.png"))
+window.resize(400, 200)
+screen = QDesktopWidget().screenGeometry()
+screen_x = (screen.width() - window.width()) // 2
+screen_y = (screen.height() - window.height()) // 2
+window.move(screen_x, screen_y)
 
-# Create the label
-label = QLabel(f"Last Update: {str(formatted_timestamp)}", window)
-
-# Set the alignment of the label to center
+label = QLabel(f"Last Update: {formatted_timestamp}", window)
 label.setAlignment(Qt.AlignCenter)
 
-# Create the button
-button = QPushButton("Click me")
+button_client = QPushButton("Download latest Client version")
+button_server = QPushButton("Download latest Server version")
 
-# Define a function to open the website
-def open_website():
-    QDesktopServices.openUrl(QUrl("https://github.com/Makusm1990/NENS/tree/main/Final/.exe"))
-button.clicked.connect(open_website)
+def download_client():
+    QDesktopServices.openUrl(QUrl(URL_GITHUB_MAIN + "client_modul.exe"))
 
-# Create a vertical layout and add the label to it
+def download_server():
+    QDesktopServices.openUrl(QUrl(URL_GITHUB_MAIN + "server_receiver.exe"))
+
+button_client.clicked.connect(download_client)
+button_server.clicked.connect(download_server)
+
 layout = QVBoxLayout()
 layout.addWidget(label)
-layout.addWidget(button)
+layout.addWidget(button_client)
+layout.addWidget(button_server)
 
-# Set the layout as the main layout for the window
 window.setLayout(layout)
 
-# Zeige das Fenster
 window.show()
-
-# Starte die GUI-Schleife
 sys.exit(app.exec_())
