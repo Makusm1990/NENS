@@ -1,0 +1,72 @@
+2022-11-08 09:58:13,349 HOST: H01R244  IP:   10.10.1.244
+2022-11-08 09:58:13,354 _Parent process PID:  7096   STATUS: startet
+2022-11-08 09:58:13,366 ___Child process: PID:  6972  STATUS: startet  Name: Key_Shortcut
+2022-11-08 09:58:13,368 ___Child process: PID:  12544  STATUS: startet  Name: Socketlisten
+2022-11-08 09:58:13,372 ___Child process: PID:  17880  STATUS: startet  Name: SystemtrayIcon
+2022-11-08 09:58:13,375 ___Child process: PID:  20312  STATUS: startet  Name: USB_Buzzer
+2022-11-08 09:58:13,375 >>>   check_parameter   :  0 <<<
+2022-11-08 09:58:14,449 HOST: H01R244  IP:   10.10.1.244
+2022-11-08 09:58:14,450 HOST: H01R244  IP:   10.10.1.244
+2022-11-08 09:58:14,450 HOST: H01R244  IP:   10.10.1.244
+2022-11-08 09:58:14,454 Listening on: ('10.10.1.244', 63000)
+2022-11-08 09:58:14,609 ___Child process: PID:  20312   STATUS: stopped   Name: USB_Buzzer
+2022-11-08 09:58:22,928 >>> Initialized via: TRAYICON <<<
+2022-11-08 09:58:22,928 >>>   ALARM FROM: H01R244 <<<
+2022-11-08 09:58:22,928 >>>   check_parameter   :  1 <<<
+2022-11-08 09:58:22,930 Connection: TRUE
+2022-11-08 09:58:22,930 >>>   Connecting: 10.10.1.244   STATUS:  successful  <<<
+2022-11-08 09:58:22,935 >>>   Connecting: 10.10.4.240   STATUS:  successful  <<<
+2022-11-08 09:58:24,110 HOST: H01R244  IP:   10.10.1.244
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.54   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.137   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.110   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.43   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.56   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.29   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.28   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.59   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.62   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.94   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.22   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.47   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.46   STATUS:  failed   <<<
+2022-11-08 09:58:24,937 >>>   Connecting: 10.10.1.19   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.11   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.15   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.69   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.79   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.113   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.27   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.39   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.119   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.55   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.58   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.51   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.50   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.52   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.60   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.75   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.24   STATUS:  failed   <<<
+2022-11-08 09:58:24,938 >>>   Connecting: 10.10.1.33   STATUS:  failed   <<<
+2022-11-08 09:58:24,939 >>>   Connecting: 10.10.1.68   STATUS:  failed   <<<
+2022-11-08 09:58:24,939 >>>   Connecting: 10.10.1.108   STATUS:  failed   <<<
+2022-11-08 09:58:24,939 >>>   Connecting: 10.10.1.74   STATUS:  failed   <<<
+2022-11-08 09:58:24,939 >>>   Connecting: 10.10.1.20   STATUS:  failed   <<<
+2022-11-08 09:58:31,706 visual_alert closed!
+2022-11-08 09:58:31,719 Listening on: ('10.10.1.244', 63000)
+2022-11-08 09:59:01,105 _____ Closing child process: 6972
+2022-11-08 09:59:01,114 _____ Closing child process: 12544
+2022-11-08 09:59:01,117 _____ Closing parent process: 7096
+2022-11-08 09:59:01,119 _____ Closing child process: 17880
+2022-11-09 08:16:46,089 HOST: H01R244  IP:   10.10.1.244
+2022-11-09 08:16:46,118 _Parent process PID:  11908   STATUS: startet
+2022-11-09 08:16:46,133 ___Child process: PID:  17420  STATUS: startet  Name: Key_Shortcut
+2022-11-09 08:16:46,137 ___Child process: PID:  15928  STATUS: startet  Name: Socketlisten
+2022-11-09 08:16:46,141 ___Child process: PID:  7184  STATUS: startet  Name: SystemtrayIcon
+2022-11-09 08:16:46,146 ___Child process: PID:  4664  STATUS: startet  Name: USB_Buzzer
+2022-11-09 08:16:46,146 >>>   check_parameter   :  0 <<<
+2022-11-09 08:16:47,201 HOST: H01R244  IP:   10.10.1.244
+2022-11-09 08:16:47,201 HOST: H01R244  IP:   10.10.1.244
+2022-11-09 08:16:47,206 Listening on: ('10.10.1.244', 63000)
+2022-11-09 08:16:47,216 HOST: H01R244  IP:   10.10.1.244
+2022-11-09 08:16:47,417 ___Child process: PID:  4664   STATUS: stopped   Name: USB_Buzzer
